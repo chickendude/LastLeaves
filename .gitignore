@@ -1,0 +1,6 @@
+build
+.idea
+*.elf
+*.gba
+*.sav
+CMakeLists.txt
