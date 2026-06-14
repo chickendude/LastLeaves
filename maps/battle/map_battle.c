@@ -2,7 +2,7 @@
 
 //const int battle_tilema = 15;
 //const int tileshigh = 10;
-const u8 battle_tilemap[] = {
+const u8 map_battle[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

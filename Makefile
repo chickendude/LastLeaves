@@ -22,10 +22,10 @@ include $(DEVKITARM)/gba_rules
 #---------------------------------------------------------------------------------
 TARGET		:= $(notdir $(CURDIR))
 BUILD		:= build
-SOURCES		:= src
-INCLUDES	:= build
+SOURCES		:= src maps/battle
+INCLUDES	:= . build
 DATA		:=
-GRAPHICS	:= gfx gfx/characters
+GRAPHICS	:= gfx gfx/characters gfx/battle
 MUSIC		:=
 
 #---------------------------------------------------------------------------------
