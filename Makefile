@@ -25,7 +25,7 @@ BUILD		:= build
 SOURCES		:= src
 INCLUDES	:= build
 DATA		:=
-GRAPHICS	:= gfx
+GRAPHICS	:= gfx gfx/characters
 MUSIC		:=
 
 #---------------------------------------------------------------------------------
