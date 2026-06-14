@@ -1,15 +1,22 @@
 #include <tonc.h>
 
 #include "title.h"
-#include "titlescreen.h"
+
+void vblank(void)
+{
+    // do nothing
+}
 
 int main(void)
 {
+    irq_init(isr_master);
+    irq_add(II_VBLANK, vblank);
+    irq_enable(II_VBLANK);
+
     oam_init(obj_mem, 128);
     memset32(tile_mem_obj, 0, 2048);
     titlescreen();
     // Random stuff for future setup
-    vid_vsync();
     REG_DISPCNT = DCNT_MODE0 |
                   DCNT_BG0 | DCNT_BG1 | DCNT_BG2 |
                   DCNT_OBJ | DCNT_OBJ_1D;
@@ -20,5 +27,8 @@ int main(void)
     REG_BG0VOFS = 0;
     REG_BG2HOFS = 0;
     REG_BG2VOFS = 0;
-    while (true);
+    while (true)
+    {
+        VBlankIntrWait();
+    }
 }

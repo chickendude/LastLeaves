@@ -37,6 +37,6 @@ void show_title_image()
         const int offset = i * WIDTH;
         memcpy16(start + offset, data + offset, WIDTH);
     }
-    vid_vsync();
+    VBlankIntrWait();
     REG_DISPCNT = DCNT_MODE4 | DCNT_BG2;
 }
