@@ -40,6 +40,7 @@ typedef struct BattleCharacter
     int is_alive;
     /** Is being targeted for an attack. */
     int is_targeted;
+    int priority;
 } BattleCharacter;
 
 /** An action to take in a battle. */
@@ -62,6 +63,10 @@ void draw_sprite(int index, BattleCharacter *character);
  * @returns 0 = no attack selected, 1 = attack selected
  */
 int select_attack(BattleCharacter *character, int *target_enemy_index);
+
+void select_enemy_attacks();
+
+void perform_attacks();
 
 void start_battle(void);
 
@@ -159,7 +164,7 @@ void draw_sprite(const int index, BattleCharacter *character)
                  ATTR1_SIZE_32x32 | fxpt_to_int(character->cur_x) | ATTR1_FLIP(
                      character->dir),
                  ATTR2_PALBANK(palette) |
-                 ATTR2_PRIO(2) | sprite_id
+                 ATTR2_PRIO(character->priority) | sprite_id
     );
 }
 
@@ -169,6 +174,53 @@ void clear_battle_queue()
     for (int i = 0; i < MAX_ACTIONS; i++)
     {
         battle_queue[i].type = AT_NONE;
+    }
+    for (int i = 0; i < party_size; i++)
+    {
+        BattleCharacter *character = &party[i];
+        character->priority = 2;
+        character->vel_y = 0;
+        character->vel_x = 0;
+    }
+}
+
+void perform_attacks()
+{
+    for (int i = 0; i < MAX_ACTIONS; i++)
+    {
+        BattleAction *action = &battle_queue[i];
+        switch (action->type)
+        {
+            case AT_ATTACK:
+                action->actor->cur_x = action->target->x;
+                action->actor->cur_y = action->target->y;
+                break;
+            case AT_NONE:
+                continue;
+            default:
+                break;
+        }
+        action->actor->priority = 0;
+        action->target->priority = 1;
+        VBlankIntrWait();
+        // Update players
+        for (int i = 0; i < party_size; i++)
+        {
+            draw_sprite(i, &party[i]);
+        }
+
+        // Update enemies
+        for (int i = 0; i < enemies_size; i++)
+        {
+            BattleCharacter *enemy = &enemies[i];
+            enemy->is_targeted = false;
+            draw_sprite(i + party_size, enemy);
+        }
+        oam_copy(oam_mem, oam_buf, 6);
+
+        for (int j = 0; j < 60; j++) VBlankIntrWait();
+        action->actor->cur_x = action->actor->x;
+        action->actor->cur_y = action->actor->y;
     }
 }
 
@@ -181,12 +233,17 @@ void start_battle()
     int battle_over = 0;
     while (!battle_over)
     {
+        // Run through random numbers while waiting
+        random(256);
         key_poll();
         VBlankIntrWait();
         oam_copy(oam_mem, oam_buf, 6);
         if (active_player_index >= party_size)
         {
-            // Select enemy turns
+            select_enemy_attacks();
+            perform_attacks();
+            active_player_index = 0;
+            clear_battle_queue();
         } else
         {
             if (select_attack(&party[active_player_index], &target_enemy_index))
@@ -282,5 +339,21 @@ void initialize_parties()
         enemies[i].cur_x = enemies[i].x;
         enemies[i].y = fxpt(80 - i * 25);
         enemies[i].cur_y = enemies[i].y;
+    }
+}
+
+void select_enemy_attacks()
+{
+    for (int i = 0; i < enemies_size; i++)
+    {
+        if (!enemies[i].is_alive) continue;
+
+        int target = random(party_size);
+        while (!party[target].is_alive)
+        {
+            target++;
+            if (target >= party_size) target = 0;
+        }
+        add_action_to_battle_queue(AT_ATTACK, &enemies[i], &party[target]);
     }
 }
