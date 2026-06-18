@@ -17,14 +17,29 @@ typedef struct BattleCharacter
     Player character;
     /** 0 = left, 1 = right */
     int dir;
+    /** Player's home X position on. */
     int x;
+    /** Where player X currently is on screen. */
+    int cur_x;
+    /** X velocity. */
+    int vel_x;
+    /** Player's home Y position on. */
     int y;
+    /** Where player Y currently is on screen. */
+    int cur_y;
+    /** Y velocity. */
+    int vel_y;
     int is_alive;
+    /** Is being targeted for an attack. */
+    int is_targeted;
 } BattleCharacter;
 
 void draw_map(void);
 
 void draw_sprite(int index, BattleCharacter *character);
+
+void select_attack(BattleCharacter *character, int *target_enemy_index);
+
 void start_battle(void);
 
 BattleCharacter party[3] = {
@@ -110,13 +125,14 @@ void draw_sprite(const int index, BattleCharacter *character)
             sprite_id = 32;
             break;
     }
+    int palette = character->is_targeted;
     obj_set_attr(&oam_buf[index],
-                 ATTR0_4BPP | ATTR0_SQUARE | character->y,
-                 ATTR1_SIZE_32x32 | character->x | ATTR1_FLIP(character->dir),
-                 ATTR2_PALBANK(0) |
+                 ATTR0_4BPP | ATTR0_SQUARE | character->cur_y >> 8,
+                 ATTR1_SIZE_32x32 | character->cur_x >> 8 | ATTR1_FLIP(
+                     character->dir),
+                 ATTR2_PALBANK(palette) |
                  ATTR2_PRIO(2) | sprite_id
     );
-    character->x = character->x;
 }
 
 void start_battle()
@@ -124,22 +140,39 @@ void start_battle()
     for (int i = 0; i < party_size; i++)
     {
         party[i].is_alive = 1;
-        party[i].x = 180 + i * 10;
-        party[i].y = 120 - i * 15;
+        party[i].x = (180 + i * 10) << 8;
+        party[i].cur_x = party[i].x;
+        party[i].y = (120 - i * 15) << 8;
+        party[i].cur_y = party[i].y;
     }
     for (int i = 0; i < enemies_size; i++)
     {
         enemies[i].is_alive = 1;
         enemies[i].dir = 1;
-        enemies[i].x = 20 + i * 10;
-        enemies[i].y = 80 - i * 25;
+        enemies[i].x = (20 + i * 10) << 8;
+        enemies[i].cur_x = enemies[i].x;
+        enemies[i].y = (80 - i * 25) << 8;
+        enemies[i].cur_y = enemies[i].y;
     }
 
+    // Which player is currently selecting moves, 0 < active_player < party_size
+    int active_player_index = 0;
+    int target_enemy_index = 0;
     int battle_over = 0;
     while (!battle_over)
     {
+        key_poll();
         VBlankIntrWait();
         oam_copy(oam_mem, oam_buf, 6);
+        if (active_player_index >= party_size)
+        {
+            // Select enemy turns
+        } else
+        {
+            select_attack(&party[active_player_index], &target_enemy_index);
+            if (target_enemy_index < 0) target_enemy_index = enemies_size - 1;
+            if (target_enemy_index >= enemies_size) target_enemy_index = 0;
+        }
 
         // Update players
         for (int i = 0; i < party_size; i++)
@@ -150,7 +183,35 @@ void start_battle()
         // Update enemies
         for (int i = 0; i < enemies_size; i++)
         {
-            draw_sprite(i + party_size, &enemies[i]);
+            BattleCharacter *enemy = &enemies[i];
+            enemy->is_targeted = i == target_enemy_index;
+            draw_sprite(i + party_size, enemy);
         }
+    }
+}
+
+void select_attack(BattleCharacter *character, int *target_enemy_index)
+{
+    // Simple animation to show which character is selected
+    character->cur_y -= character->vel_y;
+    const int off_y = character->y - character->cur_y;
+    character->vel_y += character->vel_y;
+    if (off_y >> 8 > 5)
+    {
+        character->vel_y = -25;
+    } else if (off_y <= 0)
+    {
+        character->vel_y = 25;
+    }
+
+    // Check keys
+
+    if (key_hit(KEY_LEFT))
+    {
+        (*target_enemy_index)--;
+    }
+    if (key_hit(KEY_RIGHT))
+    {
+        (*target_enemy_index)++;
     }
 }
