@@ -15,4 +15,14 @@ inline int fxpt_to_int(const int value) { return value >> FIXED_SHIFT; }
  * @return
  */
 int random(int max);
+
+/**
+ * Counts the number of digits in a number and stores the digits in an array.
+ * E.g. 5 returns 1 and [1], 5154 returns 4 and [5,1,5,4].
+ *
+ * @param number The number whose digits should be counted. Maximum of 6 digits.
+ * @param digits Array to store the digits.
+ * @return The number of digits in the number.
+ */
+int count_digits(u32 number, int *digits);
 #endif //LASTLEAVES_MATH_H
