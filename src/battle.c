@@ -14,6 +14,8 @@
 #define SBB 29
 /** Max number of actions that can take place per turn. */
 #define MAX_ACTIONS 10
+/** First tile of battle tilemap (sprite/image) data in tile_mem. */
+#define TILE_OFFSET 328
 
 typedef enum ActionType
 {
@@ -123,7 +125,7 @@ void battle()
 
 void draw_map()
 {
-    memcpy32(tile_mem, battlemapTiles, sizeof(battlemapTiles) / 4);
+    memcpy32(tile_mem[0] + TILE_OFFSET, battlemapTiles, sizeof(battlemapTiles) / 4);
     memcpy32(tile_mem[4], tann_battleTiles, tann_battleTilesLen / 4);
     memcpy32(tile_mem[4] + 16, roak_battleTiles, roak_battleTilesLen / 4);
     memcpy32(tile_mem[4] + 32, lynne_battleTiles, lynne_battleTilesLen / 4);
@@ -134,7 +136,7 @@ void draw_map()
         for (int x = 0; x < 15; x++)
         {
             int y = row * 2 * 32;
-            int tile = map_battle[row * 15 + x] * 4;
+            int tile = map_battle[row * 15 + x] * 4 + TILE_OFFSET;
             se_mem[SBB][y + x * 2] = tile;
             se_mem[SBB][y + x * 2 + 1] = tile + 1;
             se_mem[SBB][y + 32 + x * 2] = tile + 2;
