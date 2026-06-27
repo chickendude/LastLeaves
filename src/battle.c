@@ -9,6 +9,7 @@
 #include "lynne-battle.h"
 #include "roak-battle.h"
 #include "tann-battle.h"
+#include "text.h"
 
 /** Screen Block for battle map. */
 #define SBB 29
@@ -72,10 +73,30 @@ void perform_attacks();
 
 void start_battle(void);
 
+void show_statbox(void);
+
 BattleCharacter party[3] = {
-    {.character = {.type = TANN},},
-    {.character = {.type = LYNNE},},
-    {.character = {.type = ROAK},},
+    {
+        .character = {
+            .name = "TANN",
+            .type = TANN,
+            .stats = {.hp = 50, .max_hp = 110}
+        },
+    },
+    {
+        .character = {
+            .name = "LYNNE",
+            .type = LYNNE,
+            .stats = {.hp = 73, .max_hp = 120}
+        },
+    },
+    {
+        .character = {
+            .name = "ROAK",
+            .type = ROAK,
+            .stats = {.hp = 95, .max_hp = 243}
+        },
+    },
 };
 
 BattleCharacter enemies[3] = {
@@ -97,35 +118,30 @@ int enemies_size = 3;
 
 void battle()
 {
-    // Enable mode 0 (4 layers) and onlyshow BG0
-    REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_OBJ | DCNT_OBJ_1D;
+    // Enable mode 0 (4 layers) and only show BG0 for map and BG3 for text
+    REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG3 | DCNT_OBJ | DCNT_OBJ_1D;
     REG_BG0CNT = BG_CBB(0) | BG_SBB(SBB) | BG_PRIO(2) | BG_REG_32x32 | BG_4BPP;
     REG_BG0HOFS = 0;
     REG_BG0VOFS = 0;
+    REG_BG3CNT = BG_CBB(0) | BG_SBB(30) | BG_PRIO(0) | BG_REG_32x32 | BG_4BPP;
+    REG_BG3HOFS = 0;
+    REG_BG3VOFS = 0;
 
     // TODO: Load character and enemy bitmaps based off of party and enemy list
 
     draw_map();
     initialize_parties();
+    load_number_tiles();
     start_battle();
-    unsigned int keys = key_curr_state();
-    while (!keys)
-    {
-        key_poll();
-        keys = key_curr_state();
-    }
-    while (keys)
-    {
-        key_poll();
-        keys = key_curr_state();
-    }
 }
 
 // --------------- private functions -------------------
 
 void draw_map()
 {
-    memcpy32(tile_mem[0] + TILE_OFFSET, battlemapTiles, sizeof(battlemapTiles) / 4);
+    memset32(tile_mem, 0, TILE_OFFSET * 8);
+    memcpy32(tile_mem[0] + TILE_OFFSET, battlemapTiles,
+             sizeof(battlemapTiles) / 4);
     memcpy32(tile_mem[4], tann_battleTiles, tann_battleTilesLen / 4);
     memcpy32(tile_mem[4] + 16, roak_battleTiles, roak_battleTilesLen / 4);
     memcpy32(tile_mem[4] + 32, lynne_battleTiles, lynne_battleTilesLen / 4);
@@ -147,6 +163,11 @@ void draw_map()
 
 void draw_sprite(const int index, BattleCharacter *character)
 {
+    if (!character->is_alive)
+    {
+        obj_set_pos(&oam_buf[index], -60, -60);
+        return;
+    }
     int sprite_id = 0;
     switch (character->character.type)
     {
@@ -184,6 +205,14 @@ void clear_battle_queue()
         character->vel_y = 0;
         character->vel_x = 0;
     }
+    // Update enemies
+    for (int i = 0; i < enemies_size; i++)
+    {
+        BattleCharacter *enemy = &enemies[i];
+        enemy->priority = 2;
+        enemy->vel_y = 0;
+        enemy->vel_x = 0;
+    }
 }
 
 void perform_attacks()
@@ -191,19 +220,29 @@ void perform_attacks()
     for (int i = 0; i < MAX_ACTIONS; i++)
     {
         BattleAction *action = &battle_queue[i];
+        if (!action->actor->is_alive) continue;
         switch (action->type)
         {
             case AT_ATTACK:
                 action->actor->cur_x = action->target->x;
                 action->actor->cur_y = action->target->y;
+                Stats *stats = &action->target->character.stats;
+                stats->hp -= 15;
+                if (stats->hp <= 0)
+                {
+                    stats->hp = 0;
+                    action->target->is_alive = false;
+                }
                 break;
             case AT_NONE:
                 continue;
             default:
                 break;
         }
-        action->actor->priority = 0;
-        action->target->priority = 1;
+        action->actor->priority = 1;
+        action->target->priority = 2;
+        VBlankIntrWait();
+        show_statbox();
         VBlankIntrWait();
         // Update players
         for (int i = 0; i < party_size; i++)
@@ -235,6 +274,12 @@ void start_battle()
     int battle_over = 0;
     while (!battle_over)
     {
+        battle_over = true;
+        for (int i = 0; i < enemies_size; i++)
+        {
+            battle_over &= !enemies[i].is_alive;
+        }
+        show_statbox();
         // Run through random numbers while waiting
         random(256);
         key_poll();
@@ -311,6 +356,13 @@ int select_attack(BattleCharacter *character, int *target_enemy_index)
     {
         (*target_enemy_index)++;
     }
+    if (*target_enemy_index < 0) *target_enemy_index = enemies_size - 1;
+    for (int i = 0; i < enemies_size; i++)
+    {
+        if (enemies[*target_enemy_index].is_alive) break;
+        (*target_enemy_index)++;
+        if (*target_enemy_index >= enemies_size) *target_enemy_index = 0;
+    }
     if (key_hit(KEY_A))
     {
         add_action_to_battle_queue(
@@ -341,6 +393,8 @@ void initialize_parties()
         enemies[i].cur_x = enemies[i].x;
         enemies[i].y = fxpt(80 - i * 25);
         enemies[i].cur_y = enemies[i].y;
+        enemies[i].character.stats.hp = 50;
+        enemies[i].character.stats.max_hp = 50;
     }
 }
 
@@ -357,5 +411,17 @@ void select_enemy_attacks()
             if (target >= party_size) target = 0;
         }
         add_action_to_battle_queue(AT_ATTACK, &enemies[i], &party[target]);
+    }
+}
+
+void show_statbox()
+{
+    for (int i = 0; i < party_size; i++)
+    {
+        const int tile_start = i * 8;
+        const int x = i * 8;
+        print_box(i * 8, 16, 8, 4);
+        print_num(tile_start, x + 1, 17, party[i].character.stats.hp);
+        print_num(tile_start + 4, x + 4, 17, party[i].character.stats.max_hp);
     }
 }
