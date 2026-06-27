@@ -51,7 +51,6 @@ void load_number_tiles()
     memcpy32(tile_mem[0] + VRAM_NUMBERS, numbersTiles, numbersTilesLen / 4);
 }
 
-// TODO: Switch to drawing on tiles directly
 void print_num(const int tile_start, const int x, const int y, const int number)
 {
     int digits[8];
