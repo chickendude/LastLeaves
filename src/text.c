@@ -42,6 +42,7 @@ void copy_tile(uint tile_id, TILE *vram_tile, uint pixel_offset);
 void copy_split_tile(uint tile_id, TILE *vram_tile, uint pixel_offset);
 
 void setup_tilemap();
+
 // ----------------------------- Public Functions -----------------------------
 
 void load_number_tiles()
@@ -55,26 +56,25 @@ void print_num(const int tile_start, const int x, const int y, const int number)
 {
     int digits[8];
     const int num_digits = count_digits(number, digits);
-
     TILE *vram_tile = &tile_mem[0][VRAM_TEXT + tile_start];
-    int num_tiles = 0;
+
+    // Set up tilemap + clear tile data to be used in tilemap
     int width = 0;
     for (int i = 0; i < num_digits; i++)
     {
         width += number_widths[digits[i]];
-        // We need to set the tile if it is the first number or if the width
-        // of the current number pushes it to the next tile
-        if (i == 0 || width >= 8)
-        {
-            // Set tilemap entry
-            se_mem[TEXT_SBB][y * 32 + x + num_tiles] =
-                    (VRAM_TEXT + tile_start + num_tiles) | SE_PALBANK(1);
-            // Set VRAM tile to palette 2, default bg palette color
-            memset32(vram_tile++, 0x22222222, 8);
-            if (width >=8) width -= 8;
-            num_tiles++;
-        }
     }
+    const int num_tiles = (width >> 3) + 1;
+    for (int i = 0; i < num_tiles; i++)
+    {
+        // Set tilemap entry
+        se_mem[TEXT_SBB][y * 32 + x + i] =
+                (VRAM_TEXT + tile_start + i) | SE_PALBANK(1);
+        // Set VRAM tile to palette 2, default bg palette color
+        memset32(vram_tile++, 0x22222222, 8);
+    }
+
+    // Draw numbers to VRAM tiles
     vram_tile = &tile_mem[0][VRAM_TEXT + tile_start];
     uint pixel_offset = 0;
     uint digit_index = 0;
