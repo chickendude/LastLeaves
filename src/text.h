@@ -11,6 +11,11 @@
 void print_num(int tile_start, int x, int y, int number);
 
 /**
+ * Load the border tiles and number tiles into VRAM.
+ */
+void load_number_tiles();
+
+/**
  * Draws a rectangular box on screen.
  * @param x X position to draw box at
  * @param y Y position to draw box at
