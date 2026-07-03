@@ -249,15 +249,26 @@ void start_battle()
     int battle_over = 0;
     while (!battle_over)
     {
+        key_poll();
+
+        // Check if all enemies are dead
         battle_over = true;
         for (int i = 0; i < enemies_size; i++)
         {
             battle_over &= !enemies[i].is_alive;
         }
+
+        // Check if all players are dead
+        battle_over = true;
+        for (int i = 0; i < party_size; i++)
+        {
+            battle_over &= !battle_party[i].is_alive;
+        }
+        if (battle_over) break;
+
         show_statbox();
         // Run through random numbers while waiting
         random(256);
-        key_poll();
         VBlankIntrWait();
         oam_copy(oam_mem, oam_buf, 6);
         if (active_player_index >= party_size)
@@ -268,7 +279,8 @@ void start_battle()
             clear_battle_queue();
         } else
         {
-            if (select_attack(&battle_party[active_player_index], &target_enemy_index))
+            if (select_attack(&battle_party[active_player_index],
+                              &target_enemy_index))
             {
                 active_player_index++;
                 target_enemy_index = 0;
@@ -309,6 +321,8 @@ void add_action_to_battle_queue(
 
 int select_attack(BattleCharacter *character, int *target_enemy_index)
 {
+    if (!character->is_alive) return 1;
+
     // Simple animation to show which character is selected
     character->cur_y -= character->vel_y;
     const int off_y = character->y - character->cur_y;
@@ -386,7 +400,8 @@ void select_enemy_attacks()
             target++;
             if (target >= party_size) target = 0;
         }
-        add_action_to_battle_queue(AT_ATTACK, &enemies[i], &battle_party[target]);
+        add_action_to_battle_queue(AT_ATTACK, &enemies[i],
+                                   &battle_party[target]);
     }
 }
 
@@ -398,6 +413,7 @@ void show_statbox()
         const int x = i * 8;
         print_box(i * 8, 16, 8, 4);
         print_num(tile_start, x + 1, 17, battle_party[i].character->stats.hp);
-        print_num(tile_start + 4, x + 4, 17, battle_party[i].character->stats.max_hp);
+        print_num(tile_start + 4, x + 4, 17,
+                  battle_party[i].character->stats.max_hp);
     }
 }
