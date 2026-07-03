@@ -72,9 +72,19 @@ void select_enemy_attacks();
 
 void perform_attacks();
 
-void start_battle(void);
+/**
+ * Runs main battle logic.
+ * @returns 1 if all enemies are dead, 2 if all players are dead.
+ */
+int start_battle(void);
 
 void show_statbox(void);
+
+/**
+ * Checks if all members in a party (player or enemy) are dead.
+ * @returns 1 if they are all dead, 0 if at least one member is still alive.
+ */
+int are_all_dead(const BattleCharacter *characters, int size);
 
 BattleCharacter battle_party[3];
 BattleCharacter enemies[3] = {
@@ -108,6 +118,7 @@ void battle()
     initialize_parties();
     load_number_tiles();
     start_battle();
+    // TODO handle win (2) vs lose (1) state
 }
 
 // --------------- private functions -------------------
@@ -240,7 +251,7 @@ void perform_attacks()
     }
 }
 
-void start_battle()
+int start_battle()
 {
     clear_battle_queue();
     // Which player is currently selecting moves, 0 < active_player < party_size
@@ -249,26 +260,10 @@ void start_battle()
     int battle_over = 0;
     while (!battle_over)
     {
-        key_poll();
-
-        // Check if all enemies are dead
-        battle_over = true;
-        for (int i = 0; i < enemies_size; i++)
-        {
-            battle_over &= !enemies[i].is_alive;
-        }
-
-        // Check if all players are dead
-        battle_over = true;
-        for (int i = 0; i < party_size; i++)
-        {
-            battle_over &= !battle_party[i].is_alive;
-        }
-        if (battle_over) break;
-
         show_statbox();
         // Run through random numbers while waiting
         random(256);
+        key_poll();
         VBlankIntrWait();
         oam_copy(oam_mem, oam_buf, 6);
         if (active_player_index >= party_size)
@@ -302,7 +297,12 @@ void start_battle()
             enemy->is_targeted = i == target_enemy_index;
             draw_sprite(i + party_size, enemy);
         }
+
+        // Check if all enemies or players are dead
+        if (are_all_dead(enemies, enemies_size)) battle_over = 1;
+        else if (are_all_dead(battle_party, party_size)) battle_over = 2;
     }
+    return battle_over;
 }
 
 void add_action_to_battle_queue(
@@ -416,4 +416,14 @@ void show_statbox()
         print_num(tile_start + 4, x + 4, 17,
                   battle_party[i].character->stats.max_hp);
     }
+}
+
+int are_all_dead(const BattleCharacter *characters, const int size)
+{
+    int num_dead = 0;
+    for (int i = 0; i < size; i++)
+    {
+        if (!characters[i].is_alive) num_dead++;
+    }
+    return num_dead == size;
 }

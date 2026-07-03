@@ -11,6 +11,7 @@ void show_title_image();
 
 void titlescreen()
 {
+    key_poll();
     show_title_image();
     unsigned int keys = key_curr_state();
     while (!keys)
