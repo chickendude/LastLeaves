@@ -1,6 +1,7 @@
 #include <tonc.h>
 
 #include "battle.h"
+#include "party.h"
 #include "title.h"
 
 void vblank(void)
@@ -18,6 +19,7 @@ int main(void)
     {
         oam_init(obj_mem, 128);
         memset32(tile_mem_obj, 0, 2048);
+        initialize_party();
         titlescreen();
         battle();
     }

@@ -7,6 +7,7 @@
 #include "player.h"
 #include "maps/battle/map_battle.h"
 #include "lynne-battle.h"
+#include "party.h"
 #include "roak-battle.h"
 #include "tann-battle.h"
 #include "text.h"
@@ -25,7 +26,7 @@ typedef enum ActionType
 
 typedef struct BattleCharacter
 {
-    Player character;
+    Player *character;
     /** 0 = left, 1 = right */
     int dir;
     /** Player's home X position on. */
@@ -75,30 +76,7 @@ void start_battle(void);
 
 void show_statbox(void);
 
-BattleCharacter party[3] = {
-    {
-        .character = {
-            .name = "TANN",
-            .type = TANN,
-            .stats = {.hp = 50, .max_hp = 110}
-        },
-    },
-    {
-        .character = {
-            .name = "LYNNE",
-            .type = LYNNE,
-            .stats = {.hp = 73, .max_hp = 120}
-        },
-    },
-    {
-        .character = {
-            .name = "ROAK",
-            .type = ROAK,
-            .stats = {.hp = 95, .max_hp = 243}
-        },
-    },
-};
-
+BattleCharacter battle_party[3];
 BattleCharacter enemies[3] = {
     {},
     {},
@@ -107,9 +85,6 @@ BattleCharacter enemies[3] = {
 
 int battle_queue_index;
 BattleAction battle_queue[MAX_ACTIONS];
-
-// Number of players in party
-int party_size = 3;
 
 // Number of enemies in the battle
 int enemies_size = 3;
@@ -169,7 +144,7 @@ void draw_sprite(const int index, BattleCharacter *character)
         return;
     }
     int sprite_id = 0;
-    switch (character->character.type)
+    switch (character->character->type)
     {
         case TANN:
             sprite_id = 0;
@@ -200,7 +175,7 @@ void clear_battle_queue()
     }
     for (int i = 0; i < party_size; i++)
     {
-        BattleCharacter *character = &party[i];
+        BattleCharacter *character = &battle_party[i];
         character->priority = 2;
         character->vel_y = 0;
         character->vel_x = 0;
@@ -226,7 +201,7 @@ void perform_attacks()
             case AT_ATTACK:
                 action->actor->cur_x = action->target->x;
                 action->actor->cur_y = action->target->y;
-                Stats *stats = &action->target->character.stats;
+                Stats *stats = &action->target->character->stats;
                 stats->hp -= 15;
                 if (stats->hp <= 0)
                 {
@@ -247,7 +222,7 @@ void perform_attacks()
         // Update players
         for (int i = 0; i < party_size; i++)
         {
-            draw_sprite(i, &party[i]);
+            draw_sprite(i, &battle_party[i]);
         }
 
         // Update enemies
@@ -293,7 +268,7 @@ void start_battle()
             clear_battle_queue();
         } else
         {
-            if (select_attack(&party[active_player_index], &target_enemy_index))
+            if (select_attack(&battle_party[active_player_index], &target_enemy_index))
             {
                 active_player_index++;
                 target_enemy_index = 0;
@@ -305,7 +280,7 @@ void start_battle()
         // Update players
         for (int i = 0; i < party_size; i++)
         {
-            draw_sprite(i, &party[i]);
+            draw_sprite(i, &battle_party[i]);
         }
 
         // Update enemies
@@ -379,11 +354,12 @@ void initialize_parties()
 {
     for (int i = 0; i < party_size; i++)
     {
-        party[i].is_alive = 1;
-        party[i].x = fxpt(180 + i * 10);
-        party[i].cur_x = party[i].x;
-        party[i].y = fxpt(120 - i * 15);
-        party[i].cur_y = party[i].y;
+        battle_party[i].is_alive = 1;
+        battle_party[i].x = fxpt(180 + i * 10);
+        battle_party[i].cur_x = battle_party[i].x;
+        battle_party[i].y = fxpt(120 - i * 15);
+        battle_party[i].cur_y = battle_party[i].y;
+        battle_party[i].character = &party[i];
     }
     for (int i = 0; i < enemies_size; i++)
     {
@@ -393,8 +369,8 @@ void initialize_parties()
         enemies[i].cur_x = enemies[i].x;
         enemies[i].y = fxpt(80 - i * 25);
         enemies[i].cur_y = enemies[i].y;
-        enemies[i].character.stats.hp = 50;
-        enemies[i].character.stats.max_hp = 50;
+        enemies[i].character->stats.hp = 50;
+        enemies[i].character->stats.max_hp = 50;
     }
 }
 
@@ -405,12 +381,12 @@ void select_enemy_attacks()
         if (!enemies[i].is_alive) continue;
 
         int target = random(party_size);
-        while (!party[target].is_alive)
+        while (!battle_party[target].is_alive)
         {
             target++;
             if (target >= party_size) target = 0;
         }
-        add_action_to_battle_queue(AT_ATTACK, &enemies[i], &party[target]);
+        add_action_to_battle_queue(AT_ATTACK, &enemies[i], &battle_party[target]);
     }
 }
 
@@ -421,7 +397,7 @@ void show_statbox()
         const int tile_start = i * 8;
         const int x = i * 8;
         print_box(i * 8, 16, 8, 4);
-        print_num(tile_start, x + 1, 17, party[i].character.stats.hp);
-        print_num(tile_start + 4, x + 4, 17, party[i].character.stats.max_hp);
+        print_num(tile_start, x + 1, 17, battle_party[i].character->stats.hp);
+        print_num(tile_start + 4, x + 4, 17, battle_party[i].character->stats.max_hp);
     }
 }

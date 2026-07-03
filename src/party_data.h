@@ -1,21 +1,14 @@
-#ifndef LASTLEAVES_STATS_H
-#define LASTLEAVES_STATS_H
+#ifndef LASTLEAVES_PARTY_DATA_H
+#define LASTLEAVES_PARTY_DATA_H
 
-typedef struct Stats
-{
-    /** Current level */
-    int lvl;
-    /** Current HP - Health Points **/
-    int hp;
+typedef struct PlayerData {
+    char name[10];
+    // PlayerType type;
     /** Max HP **/
     int max_hp;
-    /** Current MP - Magic Points **/
-    int mp;
     /** Max MP **/
     int max_mp;
-    /** Current CP - Combo Points **/
-    int cp;
-    /** Max CP **/
+    /** Max CP - Combo Points **/
     int max_cp;
     /** Attack - Physical attacks **/
     int atk;
@@ -27,5 +20,9 @@ typedef struct Stats
     int sta;
     /** Speed - Determines order of attack **/
     int spd;
-} Stats;
-#endif //LASTLEAVES_STATS_H
+} PlayerData;
+
+extern const PlayerData tann_data;
+extern const PlayerData roak_data;
+extern const PlayerData lynne_data;
+#endif //LASTLEAVES_PARTY_DATA_H
