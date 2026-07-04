@@ -6,6 +6,6 @@
 extern OBJ_ATTR oam_buf[128];
 
 /** Max number of actions that can take place in a battle each turn. */
-#define MAX_ACTIONS 10
+#define MAX_ACTIONS 40
 
 #endif //LASTLEAVES_GLOBAL_H

@@ -100,7 +100,7 @@ int start_battle()
         if (active_player_index >= party_size)
         {
             select_enemy_attacks();
-            perform_attacks();
+            perform_battle_queue();
             active_player_index = 0;
             clear_battle_queue();
         } else
@@ -135,20 +135,6 @@ int start_battle()
         else if (are_all_dead(battle_party, party_size)) battle_over = 2;
     }
     return battle_over;
-}
-
-void add_action_to_battle_queue(
-    const ActionType type,
-    BattleCharacter *actor,
-    BattleCharacter *target
-)
-{
-    if (battle_queue_index == MAX_ACTIONS) return;
-
-    BattleAction *action = &battle_queue[battle_queue_index++];
-    action->type = type;
-    action->actor = actor;
-    action->target = target;
 }
 
 int select_attack(BattleCharacter *character, int *target_enemy_index)
@@ -186,11 +172,9 @@ int select_attack(BattleCharacter *character, int *target_enemy_index)
     }
     if (key_hit(KEY_A))
     {
-        add_action_to_battle_queue(
-            AT_ATTACK,
-            character,
-            &enemies[*target_enemy_index]
-        );
+        queue_add_action(AT_MOVE, character, &enemies[*target_enemy_index]);
+        queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index]);
+        queue_add_action(AT_RETURN, character, NULL);
         return 1;
     }
     return 0;
@@ -241,8 +225,9 @@ void select_enemy_attacks()
             target++;
             if (target >= party_size) target = 0;
         }
-        add_action_to_battle_queue(AT_ATTACK, &enemies[i],
-                                   &battle_party[target]);
+        queue_add_action(AT_MOVE, &enemies[i], &battle_party[target]);
+        queue_add_action(AT_ATTACK, &enemies[i], &battle_party[target]);
+        queue_add_action(AT_RETURN, &enemies[i], NULL);
     }
 }
 

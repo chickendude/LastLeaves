@@ -6,7 +6,12 @@
 
 typedef enum ActionType
 {
-    AT_NONE, AT_ITEM, AT_ATTACK, AT_MAGIC
+    AT_NONE,
+    AT_ITEM,
+    AT_ATTACK,
+    AT_MAGIC,
+    AT_MOVE,
+    AT_RETURN
 } ActionType;
 
 typedef struct BattleCharacter
