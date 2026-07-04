@@ -2,6 +2,9 @@
 #include "battle.h"
 
 #include "battlemap.h"
+#include "battle_actions.h"
+#include "battle_gfx.h"
+#include "battle_vars.h"
 #include "global.h"
 #include "math.h"
 #include "player.h"
@@ -14,48 +17,8 @@
 
 /** Screen Block for battle map. */
 #define SBB 29
-/** Max number of actions that can take place per turn. */
-#define MAX_ACTIONS 10
 /** First tile of battle tilemap (sprite/image) data in tile_mem. */
 #define TILE_OFFSET 328
-
-typedef enum ActionType
-{
-    AT_NONE, AT_ITEM, AT_ATTACK, AT_MAGIC
-} ActionType;
-
-typedef struct BattleCharacter
-{
-    Player *character;
-    /** 0 = left, 1 = right */
-    int dir;
-    /** Player's home X position on. */
-    int x;
-    /** Where player X currently is on screen. */
-    int cur_x;
-    /** X velocity. */
-    int vel_x;
-    /** Player's home Y position on. */
-    int y;
-    /** Where player Y currently is on screen. */
-    int cur_y;
-    /** Y velocity. */
-    int vel_y;
-    int is_alive;
-    /** Is being targeted for an attack. */
-    int is_targeted;
-    int priority;
-    /** Used to display and animate the hp when getting hit or healing. */
-    int disp_hp;
-} BattleCharacter;
-
-/** An action to take in a battle. */
-typedef struct BattleAction
-{
-    ActionType type;
-    BattleCharacter *actor;
-    BattleCharacter *target;
-} BattleAction;
 
 void battle_vblank(void);
 
@@ -65,16 +28,12 @@ void initialize_parties(void);
 
 void clear_battle_queue(void);
 
-void draw_sprite(int index, const BattleCharacter *character);
-
 /** Select an attack.
  * @returns 0 = no attack selected, 1 = attack selected
  */
 int select_attack(BattleCharacter *character, int *target_enemy_index);
 
 void select_enemy_attacks();
-
-void perform_attacks();
 
 /**
  * Runs main battle logic.
@@ -90,21 +49,11 @@ void show_statbox(void);
  */
 int are_all_dead(const BattleCharacter *characters, int size);
 
+/**
+ * Adjusts a player character's display HP to shift towards their current HP.
+ * @param character The (player) character whose display HP should be adjusted.
+ */
 void update_hp(BattleCharacter *character);
-
-BattleCharacter battle_party[3];
-Player enemy_party[3];
-BattleCharacter enemies[3] = {
-    {.character = &enemy_party[0]},
-    {.character = &enemy_party[1]},
-    {.character = &enemy_party[2]},
-};
-
-int battle_queue_index;
-BattleAction battle_queue[MAX_ACTIONS];
-
-// Number of enemies in the battle
-int enemies_size = 3;
 
 // --------------- public functions -------------------
 
@@ -354,36 +303,6 @@ void draw_map()
     }
 }
 
-void draw_sprite(const int index, const BattleCharacter *character)
-{
-    if (!character->is_alive)
-    {
-        obj_set_pos(&oam_buf[index], -60, -60);
-        return;
-    }
-    int sprite_id = 0;
-    switch (character->character->type)
-    {
-        case TANN:
-            sprite_id = 0;
-            break;
-        case ROAK:
-            sprite_id = 16;
-            break;
-        case LYNNE:
-            sprite_id = 32;
-            break;
-    }
-    int palette = character->is_targeted;
-    obj_set_attr(&oam_buf[index],
-                 ATTR0_4BPP | ATTR0_SQUARE | fxpt_to_int(character->cur_y),
-                 ATTR1_SIZE_32x32 | fxpt_to_int(character->cur_x) | ATTR1_FLIP(
-                     character->dir),
-                 ATTR2_PALBANK(palette) |
-                 ATTR2_PRIO(character->priority) | sprite_id
-    );
-}
-
 void clear_battle_queue()
 {
     battle_queue_index = 0;
@@ -405,53 +324,5 @@ void clear_battle_queue()
         enemy->priority = 2;
         enemy->vel_y = 0;
         enemy->vel_x = 0;
-    }
-}
-
-void perform_attacks()
-{
-    for (int i = 0; i < MAX_ACTIONS; i++)
-    {
-        BattleAction *action = &battle_queue[i];
-        if (!action->actor->is_alive) continue;
-        switch (action->type)
-        {
-            case AT_ATTACK:
-                action->actor->cur_x = action->target->x;
-                action->actor->cur_y = action->target->y;
-                Stats *stats = &action->target->character->stats;
-                stats->hp -= 15;
-                if (stats->hp <= 0)
-                {
-                    stats->hp = 0;
-                    action->target->is_alive = false;
-                }
-                break;
-            case AT_NONE:
-                continue;
-            default:
-                break;
-        }
-        action->actor->priority = 1;
-        action->target->priority = 2;
-        VBlankIntrWait();
-        // Update players
-        for (int i = 0; i < party_size; i++)
-        {
-            draw_sprite(i, &battle_party[i]);
-        }
-
-        // Update enemies
-        for (int i = 0; i < enemies_size; i++)
-        {
-            BattleCharacter *enemy = &enemies[i];
-            enemy->is_targeted = false;
-            draw_sprite(i + party_size, enemy);
-        }
-        oam_copy(oam_mem, oam_buf, 6);
-
-        for (int j = 0; j < 60; j++) VBlankIntrWait();
-        action->actor->cur_x = action->actor->x;
-        action->actor->cur_y = action->actor->y;
     }
 }
