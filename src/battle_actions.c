@@ -36,17 +36,17 @@ void perform_attacks()
         action->target->priority = 2;
         VBlankIntrWait();
         // Update players
-        for (int i = 0; i < party_size; i++)
+        for (int j = 0; j < party_size; j++)
         {
-            draw_sprite(i, &battle_party[i]);
+            draw_sprite(j, &battle_party[j]);
         }
 
         // Update enemies
-        for (int i = 0; i < enemies_size; i++)
+        for (int j = 0; j < enemies_size; j++)
         {
-            BattleCharacter *enemy = &enemies[i];
+            BattleCharacter *enemy = &enemies[j];
             enemy->is_targeted = false;
-            draw_sprite(i + party_size, enemy);
+            draw_sprite(j + party_size, enemy);
         }
         oam_copy(oam_mem, oam_buf, 6);
 
@@ -55,3 +55,4 @@ void perform_attacks()
         action->actor->cur_y = action->actor->y;
     }
 }
+
