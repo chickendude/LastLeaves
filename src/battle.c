@@ -75,6 +75,7 @@ void battle()
     load_number_tiles();
     irq_add(II_VBLANK, battle_vblank);
     start_battle();
+    irq_delete(II_VBLANK);
     // TODO handle win (2) vs lose (1) state
 }
 

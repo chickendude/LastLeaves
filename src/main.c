@@ -11,12 +11,11 @@ void vblank(void)
 
 int main(void)
 {
-    irq_init(isr_master);
-    irq_add(II_VBLANK, vblank);
-    irq_enable(II_VBLANK);
-
     while (true)
     {
+        irq_init(isr_master);
+        irq_add(II_VBLANK, vblank);
+        irq_enable(II_VBLANK);
         oam_init(obj_mem, 128);
         memset32(tile_mem_obj, 0, 2048);
         initialize_party();
