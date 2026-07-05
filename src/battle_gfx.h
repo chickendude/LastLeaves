@@ -3,4 +3,6 @@
 #include "battle_vars.h"
 
 void draw_sprite(int index, const BattleCharacter *character);
+void draw_damage(int damage, int x, int y);
+void update_damage_texts();
 #endif //LASTLEAVES_BATTLE_GFX_H

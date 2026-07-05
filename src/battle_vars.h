@@ -1,4 +1,3 @@
-
 #ifndef LASTLEAVES_BATTLE_VARS_H
 #define LASTLEAVES_BATTLE_VARS_H
 #include "global.h"
@@ -39,6 +38,15 @@ typedef struct BattleCharacter
     int disp_hp;
 } BattleCharacter;
 
+typedef struct DamageText
+{
+    int digits[4];
+    int num_digits;
+    int x;
+    int y;
+    int frames_left;
+} DamageText;
+
 /** An action to take in a battle. */
 typedef struct BattleAction
 {
@@ -53,5 +61,7 @@ extern BattleAction battle_queue[MAX_ACTIONS];
 extern BattleCharacter battle_party[3];
 extern BattleCharacter enemies[3];
 extern int enemies_size;
+
+extern DamageText damage_texts[MAX_DAMAGE_TEXTS];
 
 #endif //LASTLEAVES_BATTLE_VARS_H

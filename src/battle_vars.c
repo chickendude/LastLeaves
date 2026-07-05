@@ -18,3 +18,6 @@ BattleCharacter enemies[3] = {
 // Number of enemies in the battle
 int enemies_size = 3;
 
+// Damage numbers that pop up when attacking
+DamageText damage_texts[MAX_DAMAGE_TEXTS];
+

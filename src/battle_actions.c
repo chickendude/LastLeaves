@@ -61,6 +61,8 @@ void queue_add_action(
 
 void perform_attack(const BattleAction *action)
 {
+    BattleCharacter *target = action->target;
+    BattleCharacter *actor = action->actor;
     Stats *stats = &action->target->character->stats;
     stats->hp -= 15;
     if (stats->hp <= 0)
@@ -68,8 +70,9 @@ void perform_attack(const BattleAction *action)
         stats->hp = 0;
         action->target->is_alive = false;
     }
-    action->actor->priority = 1;
-    action->target->priority = 2;
+    actor->priority = 1;
+    target->priority = 2;
+    draw_damage(15, target->x + fxpt(8), target->y);
     VBlankIntrWait();
     // Update players
     for (int j = 0; j < party_size; j++)

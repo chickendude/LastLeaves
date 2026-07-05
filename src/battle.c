@@ -185,7 +185,8 @@ void battle_vblank(void)
     // Update player HPs
     for (int i = 0; i < party_size; i++) update_hp(&battle_party[i]);
     show_statbox();
-    oam_copy(oam_mem, oam_buf, 6);
+    update_damage_texts();
+    oam_copy(oam_mem, oam_buf, 30);
 }
 
 void initialize_parties()
