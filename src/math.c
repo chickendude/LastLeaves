@@ -45,3 +45,9 @@ int count_digits(u32 number, int *digits)
     }
     return index;
 }
+
+int lerp(const int start, const int dest, const int fp_position)
+{
+    const int offset = (fp_position * (dest - start)) >> FIXED_SHIFT;
+    return start + offset;
+}

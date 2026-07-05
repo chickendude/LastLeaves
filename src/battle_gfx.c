@@ -27,7 +27,7 @@ void draw_sprite(const int index, const BattleCharacter *character)
             sprite_id = 32;
             break;
     }
-    int palette = character->is_targeted;
+    const int palette = character->is_targeted;
     obj_set_attr(&oam_buf[index],
                  ATTR0_4BPP | ATTR0_SQUARE | fxpt_to_int(character->cur_y),
                  ATTR1_SIZE_32x32 | fxpt_to_int(character->cur_x) | ATTR1_FLIP(

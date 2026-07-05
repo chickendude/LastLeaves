@@ -5,6 +5,12 @@
 
 /** Converts an integer to a fixed point value, determined by FIXED_SHIFT. */
 inline int fxpt(const int value) { return value << FIXED_SHIFT; }
+
+inline int fxpt_dec(const int value, const float decimal)
+{
+    return (value << FIXED_SHIFT) + (int) (decimal * FIXED_SHIFT);
+}
+
 /** Converts a fixed point value back to an integer, determined by FIXED_SHIFT. */
 inline int fxpt_to_int(const int value) { return value >> FIXED_SHIFT; }
 
@@ -25,4 +31,14 @@ int random(int max);
  * @return The number of digits in the number.
  */
 int count_digits(u32 number, int *digits);
+
+/**
+ * Lerps between two points based on a fixed-point fraction.
+ * @param start Initial value.
+ * @param dest Final value.
+ * @param fp_position Fixed-point fraction from 0 - 1<<FIXED_SHIFT showing how
+ * far along in the lerp we are.
+ * @return The value at the current position.
+ */
+int lerp(int start, int dest, int fp_position);
 #endif //LASTLEAVES_MATH_H
