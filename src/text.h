@@ -1,6 +1,9 @@
 #ifndef LASTLEAVES_TEXT_H
 #define LASTLEAVES_TEXT_H
 
+#define VRAM_BORDERS 1
+#define VRAM_NUMBERS (1024 - 10)
+
 /**
  * Prints a number to the screen
  * @param tile_start Tile (sprite data) in VRAM to draw number to

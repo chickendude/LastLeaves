@@ -6,8 +6,6 @@
 #include "borders.h"
 #include "numbers.h"
 
-#define VRAM_BORDERS 1
-#define VRAM_NUMBERS 12
 #define VRAM_TEXT 22
 #define TEXT_SBB 30
 
@@ -43,12 +41,20 @@ void copy_split_tile(uint tile_id, TILE *vram_tile, uint pixel_offset);
 
 void setup_tilemap();
 
+/**
+ * Creates the bitmask for a row of pixels, where a value of %0000 (palette
+ * entry 0) means it is transparent.
+ * @param pixel_row Row of pixels to extract bitmask from.
+ * @return Bitmask for row of pixels.
+ */
+uint get_bitmask(uint pixel_row);
+
 // ----------------------------- Public Functions -----------------------------
 
 void load_number_tiles()
 {
     memcpy32(tile_mem[0] + VRAM_BORDERS, bordersTiles, bordersTilesLen / 4);
-    memcpy32(tile_mem[0] + VRAM_NUMBERS, numbersTiles, numbersTilesLen / 4);
+    memcpy32(tile_mem_obj[0] + VRAM_NUMBERS, numbersTiles, 10 * 8);
 }
 
 void print_num(const int tile_start, const int x, const int y, const int number)
@@ -131,15 +137,27 @@ void print_box(int x, int y, int w, int h)
 
 // ----------------------------- Private Functions -----------------------------
 
+uint get_bitmask(const uint pixel_row)
+{
+    uint row_bitmask = 0xFFFFFFFF;// << (pixel_offset * 4);
+    uint bitmask = 0xF;
+    for (int j = 0; j < 8; j++)
+    {
+        if ((pixel_row & bitmask) == 0) row_bitmask &= bitmask ^ 0xFFFFFFFF;
+        bitmask <<= 4;
+    }
+    return row_bitmask;
+}
+
 void copy_tile(const uint tile_id, TILE *vram_tile, const uint pixel_offset)
 {
     const uint *tile_data = &numbersTiles[tile_id * 8];
-    for (int j = 0; j < 8; j++)
+    for (int i = 0; i < 8; i++)
     {
-        const uint mask = 0xFFFFFFFF << (pixel_offset * 4);
-        const uint pixel_row = tile_data[j] << (pixel_offset * 4);
-        vram_tile->data[j] &= mask ^ 0xFFFFFFFF;
-        vram_tile->data[j] |= pixel_row & mask;
+        const uint pixel_row = tile_data[i] << (pixel_offset * 4);
+        const uint mask = get_bitmask(pixel_row);
+        vram_tile->data[i] &= mask ^ 0xFFFFFFFF;
+        vram_tile->data[i] |= pixel_row & mask;
     }
 }
 
@@ -151,8 +169,8 @@ void copy_split_tile(const uint tile_id, TILE *vram_tile,
     const uint *tile_data = &numbersTiles[tile_id * 8];
     for (int j = 0; j < 8; j++)
     {
-        const uint mask = 0xFFFFFFFF << (pixel_offset * 4);
         const uint pixel_row = tile_data[j] << (pixel_offset * 4);
+        const uint mask = get_bitmask(pixel_row);
         vram_tile->data[j] &= mask ^ 0xFFFFFFFF;
         vram_tile->data[j] |= pixel_row & mask;
     }
@@ -163,8 +181,8 @@ void copy_split_tile(const uint tile_id, TILE *vram_tile,
     const uint new_offset = 8 - pixel_offset;
     for (int j = 0; j < 8; j++)
     {
-        const uint mask = 0xFFFFFFFF >> (new_offset * 4);
         const uint pixel_row = tile_data[j] >> (new_offset * 4);
+        const uint mask = get_bitmask(pixel_row);
         vram_tile->data[j] &= mask ^ 0xFFFFFFFF;
         vram_tile->data[j] |= pixel_row & mask;
     }
