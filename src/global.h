@@ -12,6 +12,6 @@ extern OBJ_ATTR oam_buf[128];
 #define MAX_DAMAGE_TEXTS 5
 
 /** Number of frames to display damage text in battles. */
-#define DAMAGE_TEXT_FRAMES 80
+#define DAMAGE_TEXT_FRAMES 40
 
 #endif //LASTLEAVES_GLOBAL_H

@@ -45,6 +45,7 @@ typedef struct DamageText
     int x;
     int y;
     int frames_left;
+    OBJ_AFFINE *affine_mat;
 } DamageText;
 
 /** An action to take in a battle. */
