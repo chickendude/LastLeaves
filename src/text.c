@@ -165,7 +165,6 @@ void copy_split_tile(const uint tile_id, TILE *vram_tile,
                      const uint pixel_offset)
 {
     // -- Draw left side
-    // We
     const uint *tile_data = &numbersTiles[tile_id * 8];
     for (int j = 0; j < 8; j++)
     {
