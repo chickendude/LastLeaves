@@ -1,5 +1,6 @@
 #ifndef LASTLEAVES_PLAYER_H
 #define LASTLEAVES_PLAYER_H
+#include "party_data.h"
 #include "stats.h"
 
 typedef enum PlayerType
@@ -13,4 +14,6 @@ typedef struct Player
     PlayerType type;
     Stats stats;
 } Player;
+
+void initialize_player(Player *player, PlayerType type, const PlayerData *data);
 #endif //LASTLEAVES_PLAYER_H

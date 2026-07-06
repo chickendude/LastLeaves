@@ -2,62 +2,31 @@
 #include "battle.h"
 
 #include "battlemap.h"
+#include "battle_actions.h"
+#include "battle_gfx.h"
+#include "battle_vars.h"
 #include "global.h"
 #include "math.h"
 #include "player.h"
 #include "maps/battle/map_battle.h"
 #include "lynne-battle.h"
+#include "party.h"
 #include "roak-battle.h"
 #include "tann-battle.h"
+#include "text.h"
 
 /** Screen Block for battle map. */
 #define SBB 29
-/** Max number of actions that can take place per turn. */
-#define MAX_ACTIONS 10
+/** First tile of battle tilemap (sprite/image) data in tile_mem. */
+#define TILE_OFFSET 328
 
-typedef enum ActionType
-{
-    AT_NONE, AT_ITEM, AT_ATTACK, AT_MAGIC
-} ActionType;
-
-typedef struct BattleCharacter
-{
-    Player character;
-    /** 0 = left, 1 = right */
-    int dir;
-    /** Player's home X position on. */
-    int x;
-    /** Where player X currently is on screen. */
-    int cur_x;
-    /** X velocity. */
-    int vel_x;
-    /** Player's home Y position on. */
-    int y;
-    /** Where player Y currently is on screen. */
-    int cur_y;
-    /** Y velocity. */
-    int vel_y;
-    int is_alive;
-    /** Is being targeted for an attack. */
-    int is_targeted;
-    int priority;
-} BattleCharacter;
-
-/** An action to take in a battle. */
-typedef struct BattleAction
-{
-    ActionType type;
-    BattleCharacter *actor;
-    BattleCharacter *target;
-} BattleAction;
+void battle_vblank(void);
 
 void draw_map(void);
 
 void initialize_parties(void);
 
 void clear_battle_queue(void);
-
-void draw_sprite(int index, BattleCharacter *character);
 
 /** Select an attack.
  * @returns 0 = no attack selected, 1 = attack selected
@@ -66,165 +35,54 @@ int select_attack(BattleCharacter *character, int *target_enemy_index);
 
 void select_enemy_attacks();
 
-void perform_attacks();
+/**
+ * Runs main battle logic.
+ * @returns 1 if all enemies are dead, 2 if all players are dead.
+ */
+int start_battle(void);
 
-void start_battle(void);
+void show_statbox(void);
 
-BattleCharacter party[3] = {
-    {.character = {.type = TANN},},
-    {.character = {.type = LYNNE},},
-    {.character = {.type = ROAK},},
-};
+/**
+ * Checks if all members in a party (player or enemy) are dead.
+ * @returns 1 if they are all dead, 0 if at least one member is still alive.
+ */
+int are_all_dead(const BattleCharacter *characters, int size);
 
-BattleCharacter enemies[3] = {
-    {},
-    {},
-    {},
-};
-
-int battle_queue_index;
-BattleAction battle_queue[MAX_ACTIONS];
-
-// Number of players in party
-int party_size = 3;
-
-// Number of enemies in the battle
-int enemies_size = 3;
+/**
+ * Adjusts a player character's display HP to shift towards their current HP.
+ * @param character The (player) character whose display HP should be adjusted.
+ */
+bool update_hp(BattleCharacter *character);
 
 // --------------- public functions -------------------
 
 void battle()
 {
-    // Enable mode 0 (4 layers) and onlyshow BG0
-    REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_OBJ | DCNT_OBJ_1D;
+    // Enable mode 0 (4 layers) and only show BG0 for map and BG3 for text
+    REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG3 | DCNT_OBJ | DCNT_OBJ_1D;
     REG_BG0CNT = BG_CBB(0) | BG_SBB(SBB) | BG_PRIO(2) | BG_REG_32x32 | BG_4BPP;
     REG_BG0HOFS = 0;
     REG_BG0VOFS = 0;
+    REG_BG3CNT = BG_CBB(0) | BG_SBB(30) | BG_PRIO(0) | BG_REG_32x32 | BG_4BPP;
+    REG_BG3HOFS = 0;
+    REG_BG3VOFS = 0;
 
     // TODO: Load character and enemy bitmaps based off of party and enemy list
 
     draw_map();
     initialize_parties();
+    load_number_tiles();
+    irq_add(II_VBLANK, battle_vblank);
+    show_statbox();
     start_battle();
-    unsigned int keys = key_curr_state();
-    while (!keys)
-    {
-        key_poll();
-        keys = key_curr_state();
-    }
-    while (keys)
-    {
-        key_poll();
-        keys = key_curr_state();
-    }
+    irq_delete(II_VBLANK);
+    // TODO handle win (2) vs lose (1) state
 }
 
 // --------------- private functions -------------------
 
-void draw_map()
-{
-    memcpy32(tile_mem, battlemapTiles, sizeof(battlemapTiles) / 4);
-    memcpy32(tile_mem[4], tann_battleTiles, tann_battleTilesLen / 4);
-    memcpy32(tile_mem[4] + 16, roak_battleTiles, roak_battleTilesLen / 4);
-    memcpy32(tile_mem[4] + 32, lynne_battleTiles, lynne_battleTilesLen / 4);
-    memcpy32(pal_bg_mem, battlemapPal, battlemapPalLen / 4);
-    memcpy32(pal_obj_mem, tann_battlePal, tann_battlePalLen / 4);
-    for (int row = 0; row < 10; row++)
-    {
-        for (int x = 0; x < 15; x++)
-        {
-            int y = row * 2 * 32;
-            int tile = map_battle[row * 15 + x] * 4;
-            se_mem[SBB][y + x * 2] = tile;
-            se_mem[SBB][y + x * 2 + 1] = tile + 1;
-            se_mem[SBB][y + 32 + x * 2] = tile + 2;
-            se_mem[SBB][y + 32 + x * 2 + 1] = tile + 3;
-        }
-    }
-}
-
-void draw_sprite(const int index, BattleCharacter *character)
-{
-    int sprite_id = 0;
-    switch (character->character.type)
-    {
-        case TANN:
-            sprite_id = 0;
-            break;
-        case ROAK:
-            sprite_id = 16;
-            break;
-        case LYNNE:
-            sprite_id = 32;
-            break;
-    }
-    int palette = character->is_targeted;
-    obj_set_attr(&oam_buf[index],
-                 ATTR0_4BPP | ATTR0_SQUARE | fxpt_to_int(character->cur_y),
-                 ATTR1_SIZE_32x32 | fxpt_to_int(character->cur_x) | ATTR1_FLIP(
-                     character->dir),
-                 ATTR2_PALBANK(palette) |
-                 ATTR2_PRIO(character->priority) | sprite_id
-    );
-}
-
-void clear_battle_queue()
-{
-    battle_queue_index = 0;
-    for (int i = 0; i < MAX_ACTIONS; i++)
-    {
-        battle_queue[i].type = AT_NONE;
-    }
-    for (int i = 0; i < party_size; i++)
-    {
-        BattleCharacter *character = &party[i];
-        character->priority = 2;
-        character->vel_y = 0;
-        character->vel_x = 0;
-    }
-}
-
-void perform_attacks()
-{
-    for (int i = 0; i < MAX_ACTIONS; i++)
-    {
-        BattleAction *action = &battle_queue[i];
-        switch (action->type)
-        {
-            case AT_ATTACK:
-                action->actor->cur_x = action->target->x;
-                action->actor->cur_y = action->target->y;
-                break;
-            case AT_NONE:
-                continue;
-            default:
-                break;
-        }
-        action->actor->priority = 0;
-        action->target->priority = 1;
-        VBlankIntrWait();
-        // Update players
-        for (int i = 0; i < party_size; i++)
-        {
-            draw_sprite(i, &party[i]);
-        }
-
-        // Update enemies
-        for (int i = 0; i < enemies_size; i++)
-        {
-            BattleCharacter *enemy = &enemies[i];
-            enemy->is_targeted = false;
-            draw_sprite(i + party_size, enemy);
-        }
-        oam_copy(oam_mem, oam_buf, 6);
-
-        for (int j = 0; j < 60; j++) VBlankIntrWait();
-        action->actor->cur_x = action->actor->x;
-        action->actor->cur_y = action->actor->y;
-    }
-}
-
-void start_battle()
+int start_battle()
 {
     clear_battle_queue();
     // Which player is currently selecting moves, 0 < active_player < party_size
@@ -238,15 +96,19 @@ void start_battle()
         key_poll();
         VBlankIntrWait();
         oam_copy(oam_mem, oam_buf, 6);
+
+        // Handle enemy turn
         if (active_player_index >= party_size)
         {
             select_enemy_attacks();
-            perform_attacks();
+            perform_battle_queue();
             active_player_index = 0;
             clear_battle_queue();
         } else
+        // Handle player turn
         {
-            if (select_attack(&party[active_player_index], &target_enemy_index))
+            if (select_attack(&battle_party[active_player_index],
+                              &target_enemy_index))
             {
                 active_player_index++;
                 target_enemy_index = 0;
@@ -255,38 +117,31 @@ void start_battle()
             if (target_enemy_index >= enemies_size) target_enemy_index = 0;
         }
 
-        // Update players
+        // Update player sprites
         for (int i = 0; i < party_size; i++)
         {
-            draw_sprite(i, &party[i]);
+            draw_sprite(i, &battle_party[i]);
         }
 
-        // Update enemies
+        // Update enemy sprites
         for (int i = 0; i < enemies_size; i++)
         {
             BattleCharacter *enemy = &enemies[i];
             enemy->is_targeted = i == target_enemy_index;
             draw_sprite(i + party_size, enemy);
         }
+
+        // Check if all enemies or players are dead
+        if (are_all_dead(enemies, enemies_size)) battle_over = 1;
+        else if (are_all_dead(battle_party, party_size)) battle_over = 2;
     }
-}
-
-void add_action_to_battle_queue(
-    const ActionType type,
-    BattleCharacter *actor,
-    BattleCharacter *target
-)
-{
-    if (battle_queue_index == MAX_ACTIONS) return;
-
-    BattleAction *action = &battle_queue[battle_queue_index++];
-    action->type = type;
-    action->actor = actor;
-    action->target = target;
+    return battle_over;
 }
 
 int select_attack(BattleCharacter *character, int *target_enemy_index)
 {
+    if (!character->is_alive) return 1;
+
     // Simple animation to show which character is selected
     character->cur_y -= character->vel_y;
     const int off_y = character->y - character->cur_y;
@@ -309,27 +164,50 @@ int select_attack(BattleCharacter *character, int *target_enemy_index)
     {
         (*target_enemy_index)++;
     }
+    if (*target_enemy_index < 0) *target_enemy_index = enemies_size - 1;
+    for (int i = 0; i < enemies_size; i++)
+    {
+        if (enemies[*target_enemy_index].is_alive) break;
+        (*target_enemy_index)++;
+        if (*target_enemy_index >= enemies_size) *target_enemy_index = 0;
+    }
     if (key_hit(KEY_A))
     {
-        add_action_to_battle_queue(
-            AT_ATTACK,
-            character,
-            &enemies[*target_enemy_index]
-        );
+        queue_add_action(AT_MOVE, character, &enemies[*target_enemy_index]);
+        queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index]);
+        queue_add_action(AT_RETURN, character, NULL);
         return 1;
     }
     return 0;
+}
+
+void battle_vblank(void)
+{
+    // Update player HPs
+    bool hp_changed = false;
+    for (int i = 0; i < party_size; i++)
+    {
+        hp_changed |= update_hp(&battle_party[i]);
+    }
+
+    // If HP changed, update the stat box to show it
+    if (hp_changed) show_statbox();
+
+    update_damage_texts();
+    oam_copy(oam_mem, oam_buf, 30);
 }
 
 void initialize_parties()
 {
     for (int i = 0; i < party_size; i++)
     {
-        party[i].is_alive = 1;
-        party[i].x = fxpt(180 + i * 10);
-        party[i].cur_x = party[i].x;
-        party[i].y = fxpt(120 - i * 15);
-        party[i].cur_y = party[i].y;
+        battle_party[i].is_alive = 1;
+        battle_party[i].x = fxpt(180 + i * 10);
+        battle_party[i].cur_x = battle_party[i].x;
+        battle_party[i].y = fxpt(120 - i * 15);
+        battle_party[i].cur_y = battle_party[i].y;
+        battle_party[i].character = &party[i];
+        battle_party[i].disp_hp = party[i].stats.hp;
     }
     for (int i = 0; i < enemies_size; i++)
     {
@@ -339,6 +217,9 @@ void initialize_parties()
         enemies[i].cur_x = enemies[i].x;
         enemies[i].y = fxpt(80 - i * 25);
         enemies[i].cur_y = enemies[i].y;
+        enemies[i].character->stats.hp = 50;
+        enemies[i].character->stats.max_hp = 50;
+        enemies[i].disp_hp = 50;
     }
 }
 
@@ -349,11 +230,101 @@ void select_enemy_attacks()
         if (!enemies[i].is_alive) continue;
 
         int target = random(party_size);
-        while (!party[target].is_alive)
+        while (!battle_party[target].is_alive)
         {
             target++;
             if (target >= party_size) target = 0;
         }
-        add_action_to_battle_queue(AT_ATTACK, &enemies[i], &party[target]);
+        queue_add_action(AT_MOVE, &enemies[i], &battle_party[target]);
+        queue_add_action(AT_ATTACK, &enemies[i], &battle_party[target]);
+        queue_add_action(AT_RETURN, &enemies[i], NULL);
+    }
+}
+
+void show_statbox()
+{
+    for (int i = 0; i < party_size; i++)
+    {
+        const int tile_start = i * 16;
+        const int x = i * 8;
+        const int y = 17;
+        print_box(i * 8, 16, 8, 4);
+        print(tile_start, x + 1, y, battle_party[i].character->name);
+        print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_hp);
+        print_num(tile_start + 9, x + 4, y + 1,
+                  battle_party[i].character->stats.max_hp);
+    }
+}
+
+int are_all_dead(const BattleCharacter *characters, const int size)
+{
+    int num_dead = 0;
+    for (int i = 0; i < size; i++)
+    {
+        if (!characters[i].is_alive) num_dead++;
+    }
+    return num_dead == size;
+}
+
+bool update_hp(BattleCharacter *character)
+{
+    bool changed = 0;
+    if (character->disp_hp < character->character->stats.hp)
+    {
+        character->disp_hp++;
+        changed = true;
+    } else if (character->disp_hp > character->character->stats.hp)
+    {
+        character->disp_hp--;
+        changed = true;
+    }
+    return changed;
+}
+
+void draw_map()
+{
+    memset32(tile_mem, 0, TILE_OFFSET * 8);
+    memcpy32(tile_mem[0] + TILE_OFFSET, battlemapTiles,
+             sizeof(battlemapTiles) / 4);
+    memcpy32(tile_mem[4], tann_battleTiles, tann_battleTilesLen / 4);
+    memcpy32(tile_mem[4] + 16, roak_battleTiles, roak_battleTilesLen / 4);
+    memcpy32(tile_mem[4] + 32, lynne_battleTiles, lynne_battleTilesLen / 4);
+    memcpy32(pal_bg_mem, battlemapPal, battlemapPalLen / 4);
+    memcpy32(pal_obj_mem, tann_battlePal, tann_battlePalLen / 4);
+    for (int row = 0; row < 10; row++)
+    {
+        for (int x = 0; x < 15; x++)
+        {
+            int y = row * 2 * 32;
+            int tile = map_battle[row * 15 + x] * 4 + TILE_OFFSET;
+            se_mem[SBB][y + x * 2] = tile;
+            se_mem[SBB][y + x * 2 + 1] = tile + 1;
+            se_mem[SBB][y + 32 + x * 2] = tile + 2;
+            se_mem[SBB][y + 32 + x * 2 + 1] = tile + 3;
+        }
+    }
+}
+
+void clear_battle_queue()
+{
+    battle_queue_index = 0;
+    for (int i = 0; i < MAX_ACTIONS; i++)
+    {
+        battle_queue[i].type = AT_NONE;
+    }
+    for (int i = 0; i < party_size; i++)
+    {
+        BattleCharacter *character = &battle_party[i];
+        character->priority = 2;
+        character->vel_y = 0;
+        character->vel_x = 0;
+    }
+    // Update enemies
+    for (int i = 0; i < enemies_size; i++)
+    {
+        BattleCharacter *enemy = &enemies[i];
+        enemy->priority = 2;
+        enemy->vel_y = 0;
+        enemy->vel_x = 0;
     }
 }
