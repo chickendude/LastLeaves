@@ -53,7 +53,7 @@ int are_all_dead(const BattleCharacter *characters, int size);
  * Adjusts a player character's display HP to shift towards their current HP.
  * @param character The (player) character whose display HP should be adjusted.
  */
-void update_hp(BattleCharacter *character);
+bool update_hp(BattleCharacter *character);
 
 // --------------- public functions -------------------
 
@@ -74,6 +74,7 @@ void battle()
     initialize_parties();
     load_number_tiles();
     irq_add(II_VBLANK, battle_vblank);
+    show_statbox();
     start_battle();
     irq_delete(II_VBLANK);
     // TODO handle win (2) vs lose (1) state
@@ -183,8 +184,15 @@ int select_attack(BattleCharacter *character, int *target_enemy_index)
 void battle_vblank(void)
 {
     // Update player HPs
-    for (int i = 0; i < party_size; i++) update_hp(&battle_party[i]);
-    show_statbox();
+    bool hp_changed = false;
+    for (int i = 0; i < party_size; i++)
+    {
+        hp_changed |= update_hp(&battle_party[i]);
+    }
+
+    // If HP changed, update the stat box to show it
+    if (hp_changed) show_statbox();
+
     update_damage_texts();
     oam_copy(oam_mem, oam_buf, 30);
 }
@@ -237,11 +245,13 @@ void show_statbox()
 {
     for (int i = 0; i < party_size; i++)
     {
-        const int tile_start = i * 8;
+        const int tile_start = i * 16;
         const int x = i * 8;
+        const int y = 17;
         print_box(i * 8, 16, 8, 4);
-        print_num(tile_start, x + 1, 17, battle_party[i].disp_hp);
-        print_num(tile_start + 4, x + 4, 17,
+        print(tile_start, x + 1, y, battle_party[i].character->name);
+        print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_hp);
+        print_num(tile_start + 9, x + 4, y + 1,
                   battle_party[i].character->stats.max_hp);
     }
 }
@@ -256,15 +266,19 @@ int are_all_dead(const BattleCharacter *characters, const int size)
     return num_dead == size;
 }
 
-void update_hp(BattleCharacter *character)
+bool update_hp(BattleCharacter *character)
 {
+    bool changed = 0;
     if (character->disp_hp < character->character->stats.hp)
     {
         character->disp_hp++;
+        changed = true;
     } else if (character->disp_hp > character->character->stats.hp)
     {
         character->disp_hp--;
+        changed = true;
     }
+    return changed;
 }
 
 void draw_map()

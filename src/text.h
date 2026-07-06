@@ -13,6 +13,8 @@
  */
 void print_num(int tile_start, int x, int y, int number);
 
+void print(int tile_start, int x, int y, const char *text);
+
 /**
  * Load the border tiles and number tiles into VRAM.
  */
