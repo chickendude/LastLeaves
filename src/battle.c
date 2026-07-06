@@ -202,9 +202,9 @@ void initialize_parties()
     for (int i = 0; i < party_size; i++)
     {
         battle_party[i].is_alive = 1;
-        battle_party[i].x = fxpt(180 + i * 10);
+        battle_party[i].x = fxpt(188 + i * 10);
         battle_party[i].cur_x = battle_party[i].x;
-        battle_party[i].y = fxpt(120 - i * 15);
+        battle_party[i].y = fxpt(110 - i * 28);
         battle_party[i].cur_y = battle_party[i].y;
         battle_party[i].character = &party[i];
         battle_party[i].disp_hp = party[i].stats.hp;
