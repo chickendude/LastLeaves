@@ -73,22 +73,6 @@ void perform_attack(const BattleAction *action)
     actor->priority = 1;
     target->priority = 2;
     draw_damage(15, target->x + fxpt(8), target->y);
-    VBlankIntrWait();
-    // Update players
-    for (int j = 0; j < party_size; j++)
-    {
-        draw_sprite(j, &battle_party[j]);
-    }
-
-    // Update enemies
-    for (int j = 0; j < enemies_size; j++)
-    {
-        BattleCharacter *enemy = &enemies[j];
-        enemy->is_targeted = false;
-        draw_sprite(j + party_size, enemy);
-    }
-    oam_copy(oam_mem, oam_buf, 6);
-
     for (int j = 0; j < 60; j++) VBlankIntrWait();
 }
 

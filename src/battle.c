@@ -117,18 +117,10 @@ int start_battle()
             if (target_enemy_index >= enemies_size) target_enemy_index = 0;
         }
 
-        // Update player sprites
-        for (int i = 0; i < party_size; i++)
-        {
-            draw_sprite(i, &battle_party[i]);
-        }
-
-        // Update enemy sprites
+        // Check if enemy's getting selected in player attack selection
         for (int i = 0; i < enemies_size; i++)
         {
-            BattleCharacter *enemy = &enemies[i];
-            enemy->is_targeted = i == target_enemy_index;
-            draw_sprite(i + party_size, enemy);
+            enemies[i].is_targeted = i == target_enemy_index;
         }
 
         // Check if all enemies or players are dead
@@ -195,12 +187,27 @@ void battle_vblank(void)
 
     update_damage_texts();
     oam_copy(oam_mem, oam_buf, 30);
+    // Update player sprites
+    for (int i = 0; i < party_size; i++)
+    {
+        draw_sprite(i, &battle_party[i]);
+    }
+
+    // Update enemy sprites
+    for (int i = 0; i < enemies_size; i++)
+    {
+        draw_sprite(i + party_size, &enemies[i]);
+    }
 }
 
 void initialize_parties()
 {
     for (int i = 0; i < party_size; i++)
     {
+        enemies[i].frame_cycle = 0;
+        enemies[i].frame_index = 0;
+        battle_party[i].animation = &party[i].graphics->idle;
+        battle_party[i].index = i;
         battle_party[i].is_alive = 1;
         battle_party[i].x = fxpt(188 + i * 10);
         battle_party[i].cur_x = battle_party[i].x;
@@ -208,9 +215,14 @@ void initialize_parties()
         battle_party[i].cur_y = battle_party[i].y;
         battle_party[i].character = &party[i];
         battle_party[i].disp_hp = party[i].stats.hp;
+        draw_sprite(i, &battle_party[i]);
     }
     for (int i = 0; i < enemies_size; i++)
     {
+        enemies[i].frame_cycle = 6 * i;
+        enemies[i].frame_index = i;
+        enemies[i].animation = &party[0].graphics->idle;
+        enemies[i].index = i + party_size;
         enemies[i].is_alive = 1;
         enemies[i].dir = 1;
         enemies[i].x = fxpt(20 + i * 10);
@@ -220,6 +232,7 @@ void initialize_parties()
         enemies[i].character->stats.hp = 50;
         enemies[i].character->stats.max_hp = 50;
         enemies[i].disp_hp = 50;
+        draw_sprite(i, &enemies[i]);
     }
 }
 
@@ -286,9 +299,9 @@ void draw_map()
     memset32(tile_mem, 0, TILE_OFFSET * 8);
     memcpy32(tile_mem[0] + TILE_OFFSET, battlemapTiles,
              sizeof(battlemapTiles) / 4);
-    memcpy32(tile_mem[4], tann_battleTiles, tann_battleTilesLen / 4);
-    memcpy32(tile_mem[4] + 16, roak_battleTiles, roak_battleTilesLen / 4);
-    memcpy32(tile_mem[4] + 32, lynne_battleTiles, lynne_battleTilesLen / 4);
+    // memcpy32(tile_mem[4], tann_battleTiles, tann_battleTilesLen / 4);
+    // memcpy32(tile_mem[4] + 16, roak_battleTiles, roak_battleTilesLen / 4);
+    // memcpy32(tile_mem[4] + 32, lynne_battleTiles, lynne_battleTilesLen / 4);
     memcpy32(pal_bg_mem, battlemapPal, battlemapPalLen / 4);
     memcpy32(pal_obj_mem, tann_battlePal, tann_battlePalLen / 4);
     for (int row = 0; row < 10; row++)

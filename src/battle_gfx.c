@@ -9,25 +9,25 @@
 #include "player.h"
 #include "text.h"
 
-void draw_sprite(const int index, const BattleCharacter *character)
+// --------------- public functions -------------------
+
+void draw_sprite(const int index, BattleCharacter *character)
 {
+    const Animation *animation = character->animation;
+    if (character->frame_cycle++ == 0)
+    {
+        memcpy32(tile_mem[4] + character->index * 16, animation->sprite_data + character->frame_index*128, 32*4);
+    }
+    if (character->frame_cycle >= animation->frame_cycles[character->frame_index])
+    {
+        character->frame_index++;
+        if (character->frame_index >= animation->num_frames) character->frame_index = 0;
+        character->frame_cycle = 0;
+    }
     if (!character->is_alive)
     {
         obj_set_pos(&oam_buf[index], -60, -60);
         return;
-    }
-    int sprite_id = 0;
-    switch (character->character->type)
-    {
-        case TANN:
-            sprite_id = 0;
-            break;
-        case ROAK:
-            sprite_id = 16;
-            break;
-        case LYNNE:
-            sprite_id = 32;
-            break;
     }
     const int palette = character->is_targeted;
     obj_set_attr(&oam_buf[index],
@@ -35,7 +35,7 @@ void draw_sprite(const int index, const BattleCharacter *character)
                  ATTR1_SIZE_32x32 | fxpt_to_int(character->cur_x) | ATTR1_FLIP(
                      character->dir),
                  ATTR2_PALBANK(palette) |
-                 ATTR2_PRIO(character->priority) | sprite_id
+                 ATTR2_PRIO(character->priority) | (index * 16)
     );
 }
 
@@ -114,3 +114,5 @@ void update_damage_texts()
         dmgText->frames_left--;
     }
 }
+
+// --------------- private functions -------------------
