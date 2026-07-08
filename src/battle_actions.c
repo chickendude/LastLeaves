@@ -102,6 +102,9 @@ void move_character(
     const int steps
 )
 {
+    character->animation = &character->character->graphics->walk;
+    character->frame_cycle = 0;
+    character->frame_index = 0;
     // Find sprite ID. TODO: assign sprite ID to the BattleCharacter
     int actor_id = -1;
     for (int j = 0; j < party_size + enemies_size; j++)
@@ -128,6 +131,9 @@ void move_character(
     }
     character->cur_x = target_x;
     character->cur_y = target_y;
+    character->animation = &character->character->graphics->idle;
+    character->frame_cycle = 0;
+    character->frame_index = 0;
     draw_sprite(actor_id, character);
     VBlankIntrWait();
 }
