@@ -5,6 +5,7 @@
 #include "battle_actions.h"
 #include "battle_gfx.h"
 #include "battle_vars.h"
+#include "enemy_data.h"
 #include "global.h"
 #include "math.h"
 #include "player.h"
@@ -54,6 +55,8 @@ int are_all_dead(const BattleCharacter *characters, int size);
  * @param character The (player) character whose display HP should be adjusted.
  */
 bool update_hp(BattleCharacter *character);
+
+void load_enemy_data(Player *enemy, const PlayerData *enemy_data);
 
 // --------------- public functions -------------------
 
@@ -204,8 +207,8 @@ void initialize_parties()
 {
     for (int i = 0; i < party_size; i++)
     {
-        enemies[i].frame_cycle = 0;
-        enemies[i].frame_index = 0;
+        battle_party[i].frame_cycle = 0;
+        battle_party[i].frame_index = 0;
         battle_party[i].animation = &party[i].graphics->idle;
         battle_party[i].index = i;
         battle_party[i].is_alive = 1;
@@ -219,20 +222,24 @@ void initialize_parties()
     }
     for (int i = 0; i < enemies_size; i++)
     {
-        enemies[i].frame_cycle = 6 * i;
-        enemies[i].frame_index = i;
-        enemies[i].animation = &party[0].graphics->idle;
-        enemies[i].index = i + party_size;
-        enemies[i].is_alive = 1;
-        enemies[i].dir = 1;
-        enemies[i].x = fxpt(20 + i * 10);
-        enemies[i].cur_x = enemies[i].x;
-        enemies[i].y = fxpt(80 - i * 25);
-        enemies[i].cur_y = enemies[i].y;
-        enemies[i].character->stats.hp = 50;
-        enemies[i].character->stats.max_hp = 50;
-        enemies[i].disp_hp = 50;
-        draw_sprite(i, &enemies[i]);
+        BattleCharacter *enemy = &enemies[i];
+        load_enemy_data(enemies[i].character, &enemy_data[i]);
+        enemy->animation = &enemy->character->graphics->idle;
+        enemy->index = i + party_size;
+        enemy->is_alive = 1;
+        enemy->dir = 1;
+        enemy->x = fxpt(20 + i * 10);
+        enemy->cur_x = enemies[i].x;
+        enemy->y = fxpt(80 - i * 25);
+        enemy->cur_y = enemies[i].y;
+        enemy->character->stats.hp = 50;
+        enemy->character->stats.max_hp = 50;
+        enemy->disp_hp = 50;
+        enemy->frame_index = i;
+        // Set frame cycle to zero first so that the sprite data gets loaded
+        enemy->frame_cycle = 0;
+        draw_sprite(i, enemy);
+        enemy->frame_cycle = 6 * i;
     }
 }
 
@@ -299,17 +306,14 @@ void draw_map()
     memset32(tile_mem, 0, TILE_OFFSET * 8);
     memcpy32(tile_mem[0] + TILE_OFFSET, battlemapTiles,
              sizeof(battlemapTiles) / 4);
-    // memcpy32(tile_mem[4], tann_battleTiles, tann_battleTilesLen / 4);
-    // memcpy32(tile_mem[4] + 16, roak_battleTiles, roak_battleTilesLen / 4);
-    // memcpy32(tile_mem[4] + 32, lynne_battleTiles, lynne_battleTilesLen / 4);
     memcpy32(pal_bg_mem, battlemapPal, battlemapPalLen / 4);
     memcpy32(pal_obj_mem, tann_battlePal, tann_battlePalLen / 4);
     for (int row = 0; row < 10; row++)
     {
         for (int x = 0; x < 15; x++)
         {
-            int y = row * 2 * 32;
-            int tile = map_battle[row * 15 + x] * 4 + TILE_OFFSET;
+            const int y = row * 2 * 32;
+            const int tile = map_battle[row * 15 + x] * 4 + TILE_OFFSET;
             se_mem[SBB][y + x * 2] = tile;
             se_mem[SBB][y + x * 2 + 1] = tile + 1;
             se_mem[SBB][y + 32 + x * 2] = tile + 2;
@@ -340,4 +344,25 @@ void clear_battle_queue()
         enemy->vel_y = 0;
         enemy->vel_x = 0;
     }
+}
+
+void load_enemy_data(Player *enemy, const PlayerData *enemy_data)
+{
+    memcpy16(enemy->name,  enemy_data->name, 10/2);
+    enemy->graphics = enemy_data->graphics;
+    // TODO: Not sure if we really need this or not, currently type tells us which of the main characters it is
+    // enemy->type = type;
+    enemy->stats.lvl = 1;
+    enemy->stats.hp = enemy_data->max_hp;
+    enemy->stats.max_hp = enemy_data->max_hp;
+    enemy->stats.mp = enemy_data->max_mp;
+    enemy->stats.max_mp = enemy_data->max_mp;
+    enemy->stats.cp = enemy_data->max_cp;
+    enemy->stats.max_cp = enemy_data->max_cp;
+    enemy->stats.atk = enemy_data->atk;
+    enemy->stats.def = enemy_data->def;
+    enemy->stats.mag = enemy_data->mag;
+    enemy->stats.sta = enemy_data->sta;
+    enemy->stats.spd = enemy_data->spd;
+
 }

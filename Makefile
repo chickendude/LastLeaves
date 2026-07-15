@@ -117,7 +117,7 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 export PNGHFILES
 export PNGSFILES
 
-.PHONY: $(BUILD) clean
+.PHONY: $(BUILD) all clean
 
 #---------------------------------------------------------------------------------
 $(BUILD):
@@ -130,6 +130,7 @@ clean:
 	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).gba $(TARGET).sav
 
 
+all: $(BUILD)
 #---------------------------------------------------------------------------------
 else
 
