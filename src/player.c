@@ -11,6 +11,7 @@
 void initialize_player(Player *player, const PlayerType type, const PlayerData *data)
 {
     memcpy16(player->name,  data->name, 10/2);
+    player->graphics = data->graphics;
     player->type = type;
     player->stats.lvl = 1;
     player->stats.hp = data->max_hp;

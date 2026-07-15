@@ -16,6 +16,10 @@ typedef enum ActionType
 typedef struct BattleCharacter
 {
     Player *character;
+    const Animation *animation;
+    int index;
+    int frame_index;
+    int frame_cycle;
     /** 0 = left, 1 = right */
     int dir;
     /** Player's home X position on. */

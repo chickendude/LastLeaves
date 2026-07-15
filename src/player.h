@@ -12,8 +12,10 @@ typedef struct Player
 {
     char name[10];
     PlayerType type;
+    const PlayerGraphics *graphics;
     Stats stats;
 } Player;
 
 void initialize_player(Player *player, PlayerType type, const PlayerData *data);
+
 #endif //LASTLEAVES_PLAYER_H
