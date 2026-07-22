@@ -13,7 +13,7 @@
 
 enum
 {
-    TOPL, TOP, TOPR, MIDL, MID, MIDR, BOTL, BOT, BOTR
+    TOPL, TOP, TOPR, MIDL, MID, MIDR, BOTL, BOT, BOTR, MIDT, MIDM, MIDB
 };
 
 const u8 font_widths[] = {
