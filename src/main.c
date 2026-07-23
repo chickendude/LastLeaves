@@ -21,5 +21,6 @@ int main(void)
         initialize_party();
         titlescreen();
         battle();
+        memset32(tile_mem, 0, VRAM_SIZE);
     }
 }

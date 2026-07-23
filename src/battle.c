@@ -4,6 +4,7 @@
 #include "battlemap.h"
 #include "battle_actions.h"
 #include "battle_gfx.h"
+#include "battle_menu.h"
 #include "battle_vars.h"
 #include "enemy_data.h"
 #include "global.h"
@@ -32,7 +33,7 @@ void clear_battle_queue(void);
 /** Select an attack.
  * @returns 0 = no attack selected, 1 = attack selected
  */
-int select_attack(BattleCharacter *character, int *target_enemy_index);
+int select_attack(BattleCharacter* character, int* target_enemy_index);
 
 void select_enemy_attacks();
 
@@ -48,15 +49,15 @@ void show_statbox(void);
  * Checks if all members in a party (player or enemy) are dead.
  * @returns 1 if they are all dead, 0 if at least one member is still alive.
  */
-int are_all_dead(const BattleCharacter *characters, int size);
+int are_all_dead(const BattleCharacter* characters, int size);
 
 /**
  * Adjusts a player character's display HP to shift towards their current HP.
  * @param character The (player) character whose display HP should be adjusted.
  */
-bool update_hp(BattleCharacter *character);
+bool update_hp(BattleCharacter* character);
 
-void load_enemy_data(Player *enemy, const PlayerData *enemy_data);
+void load_enemy_data(Player* enemy, const PlayerData* enemy_data);
 
 // --------------- public functions -------------------
 
@@ -77,7 +78,6 @@ void battle()
     initialize_parties();
     load_number_tiles();
     irq_add(II_VBLANK, battle_vblank);
-    show_statbox();
     start_battle();
     irq_delete(II_VBLANK);
     // TODO handle win (2) vs lose (1) state
@@ -89,43 +89,40 @@ int start_battle()
 {
     clear_battle_queue();
     // Which player is currently selecting moves, 0 < active_player < party_size
-    int active_player_index = 0;
     int target_enemy_index = 0;
     int battle_over = 0;
     while (!battle_over)
     {
-        // Run through random numbers while waiting
-        random(256);
-        key_poll();
-        VBlankIntrWait();
-        oam_copy(oam_mem, oam_buf, 6);
+        show_statbox();
+        BattleMenu selection = battle_start_menu();
+        if (selection == MENU_FLEE)
+        {
+            battle_over = 2;
+            break;
+        }
+        int player_index = 0;
+        while (player_index < party_size)
+        {
+            BattleCharacter* character = &battle_party[player_index];
+            if (!character->is_alive) continue;
 
-        // Handle enemy turn
-        if (active_player_index >= party_size)
-        {
-            select_enemy_attacks();
-            perform_battle_queue();
-            active_player_index = 0;
-            clear_battle_queue();
-        } else
-        // Handle player turn
-        {
-            if (select_attack(&battle_party[active_player_index],
-                              &target_enemy_index))
+            const BattleMenu selection = battle_fight_menu();
+            switch (selection)
             {
-                active_player_index++;
-                target_enemy_index = 0;
+            case MENU_ATTACK:
+                // If B was pressed, restart selection
+                if (select_attack(character, &target_enemy_index)) player_index++;
+                break;
+            case MENU_ITEM:
+            case MENU_SPIRIT:
+            case MENU_MAGIC:
+            default:
+                break;
             }
-            if (target_enemy_index < 0) target_enemy_index = enemies_size - 1;
-            if (target_enemy_index >= enemies_size) target_enemy_index = 0;
         }
-
-        // Check if enemy's getting selected in player attack selection
-        for (int i = 0; i < enemies_size; i++)
-        {
-            enemies[i].is_targeted = i == target_enemy_index;
-        }
-
+        select_enemy_attacks();
+        perform_battle_queue();
+        clear_battle_queue();
         // Check if all enemies or players are dead
         if (are_all_dead(enemies, enemies_size)) battle_over = 1;
         else if (are_all_dead(battle_party, party_size)) battle_over = 2;
@@ -133,47 +130,70 @@ int start_battle()
     return battle_over;
 }
 
-int select_attack(BattleCharacter *character, int *target_enemy_index)
+int select_attack(BattleCharacter* character, int* target_enemy_index)
 {
-    if (!character->is_alive) return 1;
+    int success = 0;
+    while (true)
+    {
+        key_poll();
+        VBlankIntrWait();
+        // Simple animation to show which character is selected
+        // TODO: Not really needed anymore
+        character->cur_y -= character->vel_y;
+        const int off_y = character->y - character->cur_y;
+        character->vel_y += character->vel_y;
+        if (fxpt_to_int(off_y) > 5)
+        {
+            character->vel_y = -25;
+        }
+        else if (off_y <= 0)
+        {
+            character->vel_y = 25;
+        }
 
-    // Simple animation to show which character is selected
-    character->cur_y -= character->vel_y;
-    const int off_y = character->y - character->cur_y;
-    character->vel_y += character->vel_y;
-    if (fxpt_to_int(off_y) > 5)
-    {
-        character->vel_y = -25;
-    } else if (off_y <= 0)
-    {
-        character->vel_y = 25;
-    }
+        // Check keys
 
-    // Check keys
-
-    if (key_hit(KEY_LEFT))
-    {
-        (*target_enemy_index)--;
+        if (key_hit(KEY_LEFT))
+        {
+            (*target_enemy_index)--;
+        }
+        if (key_hit(KEY_RIGHT))
+        {
+            (*target_enemy_index)++;
+        }
+        if (*target_enemy_index < 0) *target_enemy_index = enemies_size - 1;
+        for (int i = 0; i < enemies_size; i++)
+        {
+            if (enemies[*target_enemy_index].is_alive) break;
+            (*target_enemy_index)++;
+            if (*target_enemy_index >= enemies_size) *target_enemy_index = 0;
+        }
+        if (key_hit(KEY_A))
+        {
+            queue_add_action(AT_MOVE, character, &enemies[*target_enemy_index]);
+            queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index]);
+            queue_add_action(AT_RETURN, character, NULL);
+            enemies[*target_enemy_index].is_targeted = false;
+            success = 1;
+            break;
+        }
+        if (key_hit(KEY_B))
+        {
+            success = 0;
+            break;
+        }
+        // Check if enemy's getting selected in player attack selection
+        for (int i = 0; i < enemies_size; i++)
+        {
+            enemies[i].is_targeted = i == *target_enemy_index;
+        }
     }
-    if (key_hit(KEY_RIGHT))
+    // Clear target for all enemies
+    for (int j = 0; j < enemies_size; j++)
     {
-        (*target_enemy_index)++;
+        enemies[j].is_targeted = false;
     }
-    if (*target_enemy_index < 0) *target_enemy_index = enemies_size - 1;
-    for (int i = 0; i < enemies_size; i++)
-    {
-        if (enemies[*target_enemy_index].is_alive) break;
-        (*target_enemy_index)++;
-        if (*target_enemy_index >= enemies_size) *target_enemy_index = 0;
-    }
-    if (key_hit(KEY_A))
-    {
-        queue_add_action(AT_MOVE, character, &enemies[*target_enemy_index]);
-        queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index]);
-        queue_add_action(AT_RETURN, character, NULL);
-        return 1;
-    }
-    return 0;
+    return success;
 }
 
 void battle_vblank(void)
@@ -218,11 +238,12 @@ void initialize_parties()
         battle_party[i].cur_y = battle_party[i].y;
         battle_party[i].character = &party[i];
         battle_party[i].disp_hp = party[i].stats.hp;
+        battle_party[i].disp_mp = party[i].stats.mp;
         draw_sprite(i, &battle_party[i]);
     }
     for (int i = 0; i < enemies_size; i++)
     {
-        BattleCharacter *enemy = &enemies[i];
+        BattleCharacter* enemy = &enemies[i];
         load_enemy_data(enemies[i].character, &enemy_data[i]);
         enemy->animation = &enemy->character->graphics->idle;
         enemy->index = i + party_size;
@@ -263,20 +284,24 @@ void select_enemy_attacks()
 
 void show_statbox()
 {
+    print_statbox();
     for (int i = 0; i < party_size; i++)
     {
-        const int tile_start = i * 16;
+        const int tile_start = MENU_TILES_OCCUPIED + i * 19;
         const int x = i * 8;
-        const int y = 17;
-        print_box(i * 8, 16, 8, 4);
+        const int y = 16;
+        // print_box(i * 8, 16, 8, 4);
         print(tile_start, x + 1, y, battle_party[i].character->name);
         print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_hp);
-        print_num(tile_start + 9, x + 4, y + 1,
+        print_num(tile_start + 9, x + 5, y + 1,
                   battle_party[i].character->stats.max_hp);
+        print_num(tile_start + 13, x + 1, y + 2, battle_party[i].disp_mp);
+        print_num(tile_start + 17, x + 5, y + 2,
+                  battle_party[i].character->stats.max_mp);
     }
 }
 
-int are_all_dead(const BattleCharacter *characters, const int size)
+int are_all_dead(const BattleCharacter* characters, const int size)
 {
     int num_dead = 0;
     for (int i = 0; i < size; i++)
@@ -286,14 +311,15 @@ int are_all_dead(const BattleCharacter *characters, const int size)
     return num_dead == size;
 }
 
-bool update_hp(BattleCharacter *character)
+bool update_hp(BattleCharacter* character)
 {
     bool changed = 0;
     if (character->disp_hp < character->character->stats.hp)
     {
         character->disp_hp++;
         changed = true;
-    } else if (character->disp_hp > character->character->stats.hp)
+    }
+    else if (character->disp_hp > character->character->stats.hp)
     {
         character->disp_hp--;
         changed = true;
@@ -331,7 +357,7 @@ void clear_battle_queue()
     }
     for (int i = 0; i < party_size; i++)
     {
-        BattleCharacter *character = &battle_party[i];
+        BattleCharacter* character = &battle_party[i];
         character->priority = 2;
         character->vel_y = 0;
         character->vel_x = 0;
@@ -339,16 +365,16 @@ void clear_battle_queue()
     // Update enemies
     for (int i = 0; i < enemies_size; i++)
     {
-        BattleCharacter *enemy = &enemies[i];
+        BattleCharacter* enemy = &enemies[i];
         enemy->priority = 2;
         enemy->vel_y = 0;
         enemy->vel_x = 0;
     }
 }
 
-void load_enemy_data(Player *enemy, const PlayerData *enemy_data)
+void load_enemy_data(Player* enemy, const PlayerData* enemy_data)
 {
-    memcpy16(enemy->name,  enemy_data->name, 10/2);
+    memcpy16(enemy->name, enemy_data->name, 10 / 2);
     enemy->graphics = enemy_data->graphics;
     // TODO: Not sure if we really need this or not, currently type tells us which of the main characters it is
     // enemy->type = type;
@@ -364,5 +390,4 @@ void load_enemy_data(Player *enemy, const PlayerData *enemy_data)
     enemy->stats.mag = enemy_data->mag;
     enemy->stats.sta = enemy_data->sta;
     enemy->stats.spd = enemy_data->spd;
-
 }

@@ -6,6 +6,11 @@
 #include "borders.h"
 #include "font.h"
 
+/**
+ * The first byte in the ASCII table that we have a sprite for. The first 32
+ * bytes in the ASCII chart aren't implemented in the font.
+ */
+#define ASCII_START 32
 #define NUMBER_ASCII_START 16
 #define NUMBER_DATA_START (NUMBER_ASCII_START * 8)
 #define VRAM_TEXT 22
@@ -13,7 +18,7 @@
 
 enum
 {
-    TOPL, TOP, TOPR, MIDL, MID, MIDR, BOTL, BOT, BOTR
+    TOPL, TOP, TOPR, MIDL, MID, MIDR, BOTL, BOT, BOTR, MIDT, MIDM, MIDB
 };
 
 const u8 font_widths[] = {
@@ -81,7 +86,7 @@ const u8 font_widths[] = {
     6, // 5A Z
 
     3, // 5B [
-    5, // 5C backslash
+    5, // 5C \ backslash
     3, // 5D ]
     6, // 5E ^
     5, // 5F _
@@ -161,16 +166,18 @@ void print(const int tile_start, const int x, const int y, const char *text)
     int width = 0;
     for (int i = 0; text[i] != '\0'; i++)
     {
-        width += font_widths[text[i] - 32];
+        width += font_widths[text[i] - ASCII_START];
     }
     const int num_tiles = (width >> 3) + 1;
     for (int i = 0; i < num_tiles; i++)
     {
-        // Set tilemap entry
-        se_mem[TEXT_SBB][y * 32 + x + i] =
-                (VRAM_TEXT + tile_start + i) | SE_PALBANK(1);
-        // Set VRAM tile to palette 2, default bg palette color
-        memset32(vram_tile++, 0x22222222, 8);
+        short unsigned int *tilemap_entry = &se_mem[TEXT_SBB][y * 32 + x + i];
+        // Copy current tile being drawn at this location over so we can draw
+        // the text on top of it without erasing it
+        memcpy32(vram_tile++, &tile_mem[0][*tilemap_entry], 8);
+
+        // Set new tile id for this position in tilemap
+        *tilemap_entry = (VRAM_TEXT + tile_start + i) | SE_PALBANK(1);
     }
 
     // Draw numbers to VRAM tiles
@@ -179,7 +186,7 @@ void print(const int tile_start, const int x, const int y, const char *text)
     uint index = 0;
     while (text[index] != '\0')
     {
-        const int tile_id = text[index] - 32;
+        const int tile_id = text[index] - ASCII_START;
         const uint number_width = font_widths[tile_id];
         if (pixel_offset + number_width < 8)
         {
@@ -203,7 +210,7 @@ void print_num(const int tile_start, const int x, const int y, const int number)
     char number_string[8];
     for (int i = 0; i < num_digits; i++)
     {
-        number_string[i] = digits[i] + 32 + 16;
+        number_string[i] = digits[i] + ASCII_START + NUMBER_ASCII_START;
     }
     number_string[num_digits] = 0;
     print(tile_start, x, y, number_string);
@@ -213,30 +220,78 @@ void print_box(int x, int y, int w, int h)
 {
     for (int row = 0; row < h; row++)
     {
-        int left = VRAM_BORDERS;
-        int middle = VRAM_BORDERS;
-        int right = VRAM_BORDERS;
+        int left;
+        int middle;
+        int right;
         if (row == 0)
         {
-            left += TOPL;
-            middle += TOP;
-            right += TOPR;
+            left = VRAM_BORDERS + TOPL;
+            middle = VRAM_BORDERS + TOP;
+            right = VRAM_BORDERS + TOPR;
         } else if (row == h - 1)
         {
-            left += BOTL;
-            middle += BOT;
-            right += BOTR;
+            left = VRAM_BORDERS + BOTL;
+            middle = VRAM_BORDERS + BOT;
+            right = VRAM_BORDERS + BOTR;
         } else
         {
-            left += MIDL;
-            middle += MID;
-            right += MIDR;
+            left = VRAM_BORDERS + MIDL;
+            middle = VRAM_BORDERS + MID;
+            right = VRAM_BORDERS + MIDR;
         }
         u16 *vram = &se_mem[TEXT_SBB][(y + row) * 32 + x];
         *vram++ = left | SE_PALBANK(1);
         for (int x_off = 1; x_off < w - 1; x_off++)
         {
             *vram++ = middle | SE_PALBANK(1);
+        }
+        *vram = right | SE_PALBANK(1);
+    }
+}
+
+void print_statbox()
+{
+    const int h = 5;
+    for (int row = 0; row < h; row++)
+    {
+        const int x = 0;
+        const int w = 25;
+        const int y = 15;
+        int left;
+        int middle;
+        int divider;
+        int right;
+        if (row == 0)
+        {
+            left = VRAM_BORDERS + TOPL;
+            middle = VRAM_BORDERS + TOP;
+            divider = VRAM_BORDERS + MIDT;
+            right = VRAM_BORDERS + TOPR;
+        } else if (row == h - 1)
+        {
+            left = VRAM_BORDERS + BOTL;
+            middle = VRAM_BORDERS + BOT;
+            divider = VRAM_BORDERS + MIDB;
+            right = VRAM_BORDERS + BOTR;
+        } else
+        {
+            left = VRAM_BORDERS + MIDL;
+            middle = VRAM_BORDERS + MID;
+            divider = VRAM_BORDERS + MIDM;
+            right = VRAM_BORDERS + MIDR;
+        }
+        u16 *vram = &se_mem[TEXT_SBB][(y + row) * 32 + x];
+        *vram++ = left | SE_PALBANK(1);
+        int count = 0;
+        for (int x_off = 1; x_off < w - 1; x_off++)
+        {
+            int tile = middle;
+            if (++count == 8)
+            {
+                count = 0;
+                tile = divider;
+            }
+            *vram++ = tile | SE_PALBANK(1);
         }
         *vram = right | SE_PALBANK(1);
     }
