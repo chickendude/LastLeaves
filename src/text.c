@@ -213,24 +213,24 @@ void print_box(int x, int y, int w, int h)
 {
     for (int row = 0; row < h; row++)
     {
-        int left = VRAM_BORDERS;
-        int middle = VRAM_BORDERS;
-        int right = VRAM_BORDERS;
+        int left;
+        int middle;
+        int right;
         if (row == 0)
         {
-            left += TOPL;
-            middle += TOP;
-            right += TOPR;
+            left = VRAM_BORDERS + TOPL;
+            middle = VRAM_BORDERS + TOP;
+            right = VRAM_BORDERS + TOPR;
         } else if (row == h - 1)
         {
-            left += BOTL;
-            middle += BOT;
-            right += BOTR;
+            left = VRAM_BORDERS + BOTL;
+            middle = VRAM_BORDERS + BOT;
+            right = VRAM_BORDERS + BOTR;
         } else
         {
-            left += MIDL;
-            middle += MID;
-            right += MIDR;
+            left = VRAM_BORDERS + MIDL;
+            middle = VRAM_BORDERS + MID;
+            right = VRAM_BORDERS + MIDR;
         }
         u16 *vram = &se_mem[TEXT_SBB][(y + row) * 32 + x];
         *vram++ = left | SE_PALBANK(1);
@@ -250,28 +250,28 @@ void print_statbox()
         const int x = 0;
         const int w = 25;
         const int y = 15;
-        int left = VRAM_BORDERS;
-        int middle = VRAM_BORDERS;
-        int divider = VRAM_BORDERS;
-        int right = VRAM_BORDERS;
+        int left;
+        int middle;
+        int divider;
+        int right;
         if (row == 0)
         {
-            left += TOPL;
-            middle += TOP;
-            divider += MIDT;
-            right += TOPR;
+            left = VRAM_BORDERS + TOPL;
+            middle = VRAM_BORDERS + TOP;
+            divider = VRAM_BORDERS + MIDT;
+            right = VRAM_BORDERS + TOPR;
         } else if (row == h - 1)
         {
-            left += BOTL;
-            middle += BOT;
-            divider += MIDB;
-            right += BOTR;
+            left = VRAM_BORDERS + BOTL;
+            middle = VRAM_BORDERS + BOT;
+            divider = VRAM_BORDERS + MIDB;
+            right = VRAM_BORDERS + BOTR;
         } else
         {
-            left += MIDL;
-            middle += MID;
-            divider += MIDM;
-            right += MIDR;
+            left = VRAM_BORDERS + MIDL;
+            middle = VRAM_BORDERS + MID;
+            divider = VRAM_BORDERS + MIDM;
+            right = VRAM_BORDERS + MIDR;
         }
         u16 *vram = &se_mem[TEXT_SBB][(y + row) * 32 + x];
         *vram++ = left | SE_PALBANK(1);
