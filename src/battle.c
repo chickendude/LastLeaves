@@ -238,6 +238,7 @@ void initialize_parties()
         battle_party[i].cur_y = battle_party[i].y;
         battle_party[i].character = &party[i];
         battle_party[i].disp_hp = party[i].stats.hp;
+        battle_party[i].disp_mp = party[i].stats.mp;
         draw_sprite(i, &battle_party[i]);
     }
     for (int i = 0; i < enemies_size; i++)
@@ -283,16 +284,20 @@ void select_enemy_attacks()
 
 void show_statbox()
 {
+    print_statbox();
     for (int i = 0; i < party_size; i++)
     {
-        const int tile_start = MENU_TILES_OCCUPIED + i * 16;
+        const int tile_start = MENU_TILES_OCCUPIED + i * 19;
         const int x = i * 8;
-        const int y = 17;
-        print_box(i * 8, 16, 8, 4);
+        const int y = 16;
+        // print_box(i * 8, 16, 8, 4);
         print(tile_start, x + 1, y, battle_party[i].character->name);
         print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_hp);
-        print_num(tile_start + 9, x + 4, y + 1,
+        print_num(tile_start + 9, x + 5, y + 1,
                   battle_party[i].character->stats.max_hp);
+        print_num(tile_start + 13, x + 1, y + 2, battle_party[i].disp_mp);
+        print_num(tile_start + 17, x + 5, y + 2,
+                  battle_party[i].character->stats.max_mp);
     }
 }
 

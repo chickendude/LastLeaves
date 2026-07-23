@@ -35,11 +35,13 @@ typedef struct BattleCharacter
     /** Y velocity. */
     int vel_y;
     int is_alive;
-    /** Is being targeted for an attack. */
+    /** Is being targeted for an attack (used for selecting enemies). */
     int is_targeted;
     int priority;
     /** Used to display and animate the hp when getting hit or healing. */
     int disp_hp;
+    /** Used to display and animate the mp when casting a spell. */
+    int disp_mp;
 } BattleCharacter;
 
 typedef struct DamageText

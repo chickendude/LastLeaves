@@ -29,4 +29,9 @@ void load_number_tiles();
  */
 void print_box(int x, int y, int w, int h);
 
+/**
+ * Draws the battle stats box.
+ */
+void print_statbox();
+
 #endif //LASTLEAVES_TEXT_H

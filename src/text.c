@@ -242,6 +242,54 @@ void print_box(int x, int y, int w, int h)
     }
 }
 
+void print_statbox()
+{
+    const int h = 5;
+    for (int row = 0; row < h; row++)
+    {
+        const int x = 0;
+        const int w = 25;
+        const int y = 15;
+        int left = VRAM_BORDERS;
+        int middle = VRAM_BORDERS;
+        int divider = VRAM_BORDERS;
+        int right = VRAM_BORDERS;
+        if (row == 0)
+        {
+            left += TOPL;
+            middle += TOP;
+            divider += MIDT;
+            right += TOPR;
+        } else if (row == h - 1)
+        {
+            left += BOTL;
+            middle += BOT;
+            divider += MIDB;
+            right += BOTR;
+        } else
+        {
+            left += MIDL;
+            middle += MID;
+            divider += MIDM;
+            right += MIDR;
+        }
+        u16 *vram = &se_mem[TEXT_SBB][(y + row) * 32 + x];
+        *vram++ = left | SE_PALBANK(1);
+        int count = 0;
+        for (int x_off = 1; x_off < w - 1; x_off++)
+        {
+            int tile = middle;
+            if (++count == 8)
+            {
+                count = 0;
+                tile = divider;
+            }
+            *vram++ = tile | SE_PALBANK(1);
+        }
+        *vram = right | SE_PALBANK(1);
+    }
+}
+
 // ----------------------------- Private Functions -----------------------------
 
 uint get_bitmask(const uint pixel_row)
