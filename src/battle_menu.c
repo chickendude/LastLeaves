@@ -34,7 +34,7 @@ BattleMenu battle_start_menu()
         key_poll();
         keys = key_curr_state();
     }
-    memset32(&se_mem[30], 0, 256);
+    memset32(&se_mem[30], 0, 224);
     return key_pressed;
 }
 
@@ -73,7 +73,7 @@ BattleMenu battle_fight_menu()
         key_poll();
         keys = key_curr_state();
     }
-    memset32(&se_mem[30], 0, 256);
+    memset32(&se_mem[30], 0, 240);
     return key_pressed;
 }
 // ------------------ Private Functions -----------------
