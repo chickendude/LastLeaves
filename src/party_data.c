@@ -54,7 +54,7 @@ const PlayerData tann_data = {
     8,
     8,
     30,
-    10
+    30
 };
 
 const PlayerData roak_data = {
@@ -80,5 +80,5 @@ const PlayerData lynne_data = {
     7,
     5,
     35,
-    13
+    23
 };

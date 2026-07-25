@@ -8,6 +8,17 @@
 #include "party.h"
 #include "player.h"
 #include "text.h"
+#include "attackbar.h"
+#include "attackbar_end.h"
+#include "borders.h"
+
+#define VRAM_BATTLE_BAR (bordersTilesLen / 32 + VRAM_BORDERS)
+/** X position in tiles to show the battle bar. */
+#define BAR_X 6
+/** Y position in tiles to show the battle bar. */
+#define BAR_Y 13
+/** VRAM offset where battle bar will be drawn. */
+#define BAR_LOCATION (32 * BAR_Y + BAR_X)
 
 // --------------- public functions -------------------
 
@@ -16,12 +27,15 @@ void draw_sprite(const int index, BattleCharacter *character)
     const Animation *animation = character->animation;
     if (character->frame_cycle++ == 0)
     {
-        memcpy32(tile_mem[4] + character->index * 16, animation->sprite_data + character->frame_index*128, 32*4);
+        memcpy32(tile_mem[4] + character->index * 16,
+                 animation->sprite_data + character->frame_index * 128, 32 * 4);
     }
-    if (character->frame_cycle >= animation->frame_cycles[character->frame_index])
+    if (character->frame_cycle >= animation->frame_cycles[character->
+            frame_index])
     {
         character->frame_index++;
-        if (character->frame_index >= animation->num_frames) character->frame_index = 0;
+        if (character->frame_index >= animation->num_frames)
+            character->frame_index = 0;
         character->frame_cycle = 0;
     }
     if (!character->is_alive)
@@ -85,8 +99,8 @@ void update_damage_texts()
         // Scale the text in. Larger number means the sprite will be smaller.
         // They are in FPN, so 1<<8 means no transformation, 2<<8 = .5x zoom
         // (it's half the normal size), 1<<7 = 2x zoom (twice normal size).
-        int scale = (2 << 8) - frame * .10 * (1<<8);
-        if (scale < 1<<8) scale = 1<<8;
+        int scale = (2 << 8) - frame * .10 * (1 << 8);
+        if (scale < 1 << 8) scale = 1 << 8;
 
         // With the zoom, we want the number sprites to start off closer and
         // gradually move away from each other.
@@ -113,6 +127,39 @@ void update_damage_texts()
         }
         dmgText->frames_left--;
     }
+}
+
+void load_battlebar_tiles()
+{
+    memcpy32(tile_mem[0] + VRAM_BATTLE_BAR, attackbarTiles,
+             attackbarTilesLen / 4);
+    memcpy32(tile_mem_obj[1], attackbar_endTiles, attackbar_endTilesLen / 4);
+}
+
+void draw_battlebar(const BattleCharacter *character)
+{
+    const int bar_size = character->character->stats.sta;
+    const int num_middle_bars = (bar_size - 6 + 8) >> 3;
+
+    // Draw left side + middle of battle bar
+    se_mem[30][BAR_LOCATION] = VRAM_BATTLE_BAR;
+    se_mem[30][BAR_LOCATION + 32] = VRAM_BATTLE_BAR + 1;
+    for (int i = 0; i < num_middle_bars; i++)
+    {
+        se_mem[30][BAR_LOCATION + 1 + i] = VRAM_BATTLE_BAR + 2;
+        se_mem[30][BAR_LOCATION + 1 + i + 32] = VRAM_BATTLE_BAR + 3;
+    }
+    obj_set_attr(&oam_buf[11],
+                 ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(BAR_Y * 8),
+                 ATTR1_SIZE_16x16 | ATTR1_X(BAR_X * 8 + bar_size),
+                 ATTR2_PALBANK(0) | ATTR2_PRIO(0) | 512);
+}
+
+void clear_battlebar()
+{
+    memset32(&se_mem[30][BAR_LOCATION], 0, 20 / 2);
+    memset32(&se_mem[30][BAR_LOCATION + 32], 0, 20 / 2);
+    obj_set_pos(&oam_buf[11], -16, -16);
 }
 
 // --------------- private functions -------------------

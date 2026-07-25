@@ -77,6 +77,7 @@ void battle()
     draw_map();
     initialize_parties();
     load_number_tiles();
+    load_battlebar_tiles();
     irq_add(II_VBLANK, battle_vblank);
     start_battle();
     irq_delete(II_VBLANK);
@@ -132,6 +133,7 @@ int start_battle()
 
 int select_attack(BattleCharacter* character, int* target_enemy_index)
 {
+    draw_battlebar(character);
     int success = 0;
     while (true)
     {
@@ -193,6 +195,7 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
     {
         enemies[j].is_targeted = false;
     }
+    clear_battlebar();
     return success;
 }
 
