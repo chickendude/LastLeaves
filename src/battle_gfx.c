@@ -120,7 +120,13 @@ void update_damage_texts()
 
             if (dmgText->frames_left == 0)
             {
-                obj_set_pos(oam_entry, -8, -8);
+                obj_hide(oam_entry);
+            } else if (dmgText->frames_left < 8)
+            {
+                // Fade away at the end of the animation
+                REG_BLDCNT = BLD_BUILD(0, BLD_BG0, FADE_ALPHA);
+                REG_BLDALPHA = BLDA_BUILD(16, 8 - dmgText->frames_left);
+                oam_entry->attr0 = oam_entry->attr0 | ATTR0_BLEND;
             } else
             {
                 obj_aff_scale(dmgText->affine_mat, scale, scale);

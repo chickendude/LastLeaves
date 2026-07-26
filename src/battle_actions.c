@@ -62,15 +62,24 @@ void queue_add_action(
 void perform_attack(const BattleAction *action)
 {
     const BattleCharacter *target = action->target;
-    Stats *stats = &action->target->character->stats;
-    stats->hp -= 15;
-    if (stats->hp <= 0)
+    const BattleCharacter *actor = action->actor;
+    Stats *actor_stats = &actor->character->stats;
+    Stats *target_stats = &action->target->character->stats;
+    int attack_index = 0;
+    AttackDir attack_dir = actor->attack_combo[attack_index];
+    while (attack_dir != ATK_NONE)
     {
-        stats->hp = 0;
+        const int dmg = actor_stats->atk + random((actor_stats->atk >> 2) + 1);
+        target_stats->hp -= dmg;
+        attack_dir = action->actor->attack_combo[++attack_index];
+        draw_damage(dmg, target->x + fxpt(8), target->y);
+        VBlankIntrDelay(30);
+    }
+    if (target_stats->hp <= 0)
+    {
+        target_stats->hp = 0;
         action->target->is_alive = false;
     }
-    draw_damage(15, target->x + fxpt(8), target->y);
-    for (int j = 0; j < 60; j++) VBlankIntrWait();
 }
 
 void perform_move(const BattleAction *action)
