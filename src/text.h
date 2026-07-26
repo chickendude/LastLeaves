@@ -9,7 +9,7 @@
  * @param tile_start Tile (sprite data) in VRAM to draw number to
  * @param x X position in the text background
  * @param y Y position in the text background
- * @param number Value to print
+ * @param number Value to print. Numbers below zero will be displayed as zero.
  */
 void print_num(int tile_start, int x, int y, int number);
 
