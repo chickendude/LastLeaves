@@ -25,7 +25,9 @@ void clear_battlebar();
  */
 bool add_attack(BattleCharacter *character, AttackDir attack_dir, int index);
 
+void draw_attack_sprites(const AttackDir *attack_dirs);
+
 void remove_last_attack(BattleCharacter *character);
 
-void clear_attacks();
+void clear_attackbar_sprites();
 #endif //LASTLEAVES_BATTLE_GFX_H

@@ -136,6 +136,11 @@ int start_battle()
 int select_attack(BattleCharacter* character, int* target_enemy_index)
 {
     draw_battlebar(character);
+    // Prefill attack bar if we have a previous attack
+    if (character->attack_combo[0] != ATK_NONE)
+    {
+        draw_attack_sprites(character->attack_combo);
+    }
     int success = 0;
     int command_index = 0;
     while (true)
@@ -177,6 +182,10 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
         // Check keys
 
         bool attack_added = false;
+        if (key_hit(KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN) && command_index == 0)
+        {
+            clear_attackbar_sprites();
+        }
         if (key_hit(KEY_LEFT))
         {
             attack_added = add_attack(character, ATK_LEFT, command_index);
@@ -214,6 +223,10 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
             {
                 remove_last_attack(character);
                 command_index--;
+            } else if (command_index == 0 && character->attack_combo[0] != ATK_NONE)
+            {
+                character->attack_combo[0] = ATK_NONE;
+                clear_attackbar_sprites();
             } else
             {
                 success = 0;
@@ -232,7 +245,7 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
         enemies[j].is_targeted = false;
     }
     clear_battlebar();
-    clear_attacks();
+    clear_attackbar_sprites();
     return success;
 }
 

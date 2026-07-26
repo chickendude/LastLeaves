@@ -178,7 +178,7 @@ void clear_battlebar()
     obj_hide(&oam_buf[BAR_INDEX]);
 }
 
-void clear_attacks()
+void clear_attackbar_sprites()
 {
     memset32(&oam_buf[ARROW_SPRITE_INDEX], 0, MAX_COMBO * sizeof(OBJ_ATTR) / 4);
 }
@@ -186,7 +186,8 @@ void clear_attacks()
 bool add_attack(BattleCharacter *character, const AttackDir attack_dir,
                 const int index)
 {
-    if (index >= MAX_COMBO || (index + 1) * 7 > character->disp_sta) return false;
+    if (index >= MAX_COMBO || (index + 1) * 7 > character->disp_sta) return
+            false;
     character->attack_combo[index] = attack_dir;
     character->attack_combo[index + 1] = ATK_NONE;
     obj_set_attr(&oam_buf[ARROW_SPRITE_INDEX + index],
@@ -196,6 +197,21 @@ bool add_attack(BattleCharacter *character, const AttackDir attack_dir,
                  ATTR2_PRIO(0) | (515 + attack_dir)
     );
     return true;
+}
+
+void draw_attack_sprites(const AttackDir *attack_dirs)
+{
+    for (int i = 0; i < MAX_COMBO; i++)
+    {
+        if (attack_dirs[i] == ATK_NONE) break;
+        obj_set_attr(&oam_buf[ARROW_SPRITE_INDEX + i],
+                     ATTR0_4BPP | ATTR0_REG | ATTR0_SQUARE | ATTR0_Y(
+                         BAR_Y * 8 + 1),
+                     ATTR1_SIZE_8x8 | ATTR1_X(BAR_X * 8 + 3 + i * 7),
+                     ATTR2_PALBANK(1) |
+                     ATTR2_PRIO(0) | (515 + attack_dirs[i])
+        );
+    }
 }
 
 void remove_last_attack(BattleCharacter *character)
