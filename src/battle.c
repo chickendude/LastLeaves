@@ -333,8 +333,7 @@ void show_statbox()
         const int y = 16;
         // print_box(i * 8, 16, 8, 4);
         print(tile_start, x + 1, y, battle_party[i].character->name);
-        // print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_hp);
-        print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_sta);
+        print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_hp);
         print_num(tile_start + 9, x + 5, y + 1,
                   battle_party[i].character->stats.max_hp);
         print_num(tile_start + 13, x + 1, y + 2, battle_party[i].disp_mp);
