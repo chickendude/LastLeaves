@@ -1,7 +1,6 @@
 #include "party_data.h"
 
 #include "lynne-battle.h"
-#include "player.h"
 #include "roak-battle.h"
 #include "tann-battle.h"
 
