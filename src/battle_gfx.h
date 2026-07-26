@@ -3,7 +3,9 @@
 #include "battle_vars.h"
 
 void draw_sprite(int index, BattleCharacter *character);
+
 void draw_damage(int damage, int x, int y);
+
 void update_damage_texts();
 
 /**
@@ -14,5 +16,16 @@ void update_damage_texts();
 void load_battlebar_tiles();
 
 void draw_battlebar(const BattleCharacter *character);
+
 void clear_battlebar();
+
+/**
+ * Add an attack to the players attack combo for this round.
+ * @return True if the attack was added, else false.
+ */
+bool add_attack(BattleCharacter *character, AttackDir attack_dir, int index);
+
+void remove_last_attack(BattleCharacter *character);
+
+void clear_attacks();
 #endif //LASTLEAVES_BATTLE_GFX_H

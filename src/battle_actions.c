@@ -61,8 +61,7 @@ void queue_add_action(
 
 void perform_attack(const BattleAction *action)
 {
-    BattleCharacter *target = action->target;
-    BattleCharacter *actor = action->actor;
+    const BattleCharacter *target = action->target;
     Stats *stats = &action->target->character->stats;
     stats->hp -= 15;
     if (stats->hp <= 0)
@@ -70,8 +69,6 @@ void perform_attack(const BattleAction *action)
         stats->hp = 0;
         action->target->is_alive = false;
     }
-    actor->priority = 1;
-    target->priority = 2;
     draw_damage(15, target->x + fxpt(8), target->y);
     for (int j = 0; j < 60; j++) VBlankIntrWait();
 }

@@ -65,14 +65,12 @@ void battle()
 {
     // Enable mode 0 (4 layers) and only show BG0 for map and BG3 for text
     REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG3 | DCNT_OBJ | DCNT_OBJ_1D;
-    REG_BG0CNT = BG_CBB(0) | BG_SBB(SBB) | BG_PRIO(2) | BG_REG_32x32 | BG_4BPP;
+    REG_BG0CNT = BG_CBB(0) | BG_SBB(SBB) | BG_PRIO(3) | BG_REG_32x32 | BG_4BPP;
     REG_BG0HOFS = 0;
     REG_BG0VOFS = 0;
-    REG_BG3CNT = BG_CBB(0) | BG_SBB(30) | BG_PRIO(0) | BG_REG_32x32 | BG_4BPP;
+    REG_BG3CNT = BG_CBB(0) | BG_SBB(30) | BG_PRIO(1) | BG_REG_32x32 | BG_4BPP;
     REG_BG3HOFS = 0;
     REG_BG3VOFS = 0;
-
-    // TODO: Load character and enemy bitmaps based off of party and enemy list
 
     draw_map();
     initialize_parties();
@@ -105,7 +103,11 @@ int start_battle()
         while (player_index < party_size)
         {
             BattleCharacter* character = &battle_party[player_index];
-            if (!character->is_alive) continue;
+            if (!character->is_alive)
+            {
+                player_index++;
+                continue;
+            }
 
             const BattleMenu selection = battle_fight_menu();
             switch (selection)
@@ -135,9 +137,28 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
 {
     draw_battlebar(character);
     int success = 0;
+    int command_index = 0;
     while (true)
     {
         key_poll();
+
+#ifdef DEBUG
+        int *sta = &character->disp_sta;
+        if (key_is_down(KEY_R))
+        {
+            if (*sta < MAX_COMBO * 7) (*sta)++;
+            clear_battlebar();
+            draw_battlebar(character);
+            show_statbox();
+        } else if (key_is_down(KEY_L))
+        {
+            if (*sta > 10) (*sta)--;
+            clear_battlebar();
+            draw_battlebar(character);
+            show_statbox();
+        }
+#endif
+
         VBlankIntrWait();
         // Simple animation to show which character is selected
         // TODO: Not really needed anymore
@@ -155,14 +176,22 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
 
         // Check keys
 
+        bool attack_added = false;
         if (key_hit(KEY_LEFT))
         {
-            (*target_enemy_index)--;
-        }
-        if (key_hit(KEY_RIGHT))
+            attack_added = add_attack(character, ATK_LEFT, command_index);
+        } else if (key_hit(KEY_RIGHT))
         {
-            (*target_enemy_index)++;
+            attack_added = add_attack(character, ATK_RIGHT, command_index);
+        } else if (key_hit(KEY_UP))
+        {
+            attack_added = add_attack(character, ATK_HIGH, command_index);
+        } else if (key_hit(KEY_DOWN))
+        {
+            attack_added = add_attack(character, ATK_LOW, command_index);
         }
+        if (attack_added) command_index++;
+
         if (*target_enemy_index < 0) *target_enemy_index = enemies_size - 1;
         for (int i = 0; i < enemies_size; i++)
         {
@@ -181,8 +210,15 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
         }
         if (key_hit(KEY_B))
         {
-            success = 0;
-            break;
+            if (command_index > 0)
+            {
+                remove_last_attack(character);
+                command_index--;
+            } else
+            {
+                success = 0;
+                break;
+            }
         }
         // Check if enemy's getting selected in player attack selection
         for (int i = 0; i < enemies_size; i++)
@@ -196,6 +232,7 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
         enemies[j].is_targeted = false;
     }
     clear_battlebar();
+    clear_attacks();
     return success;
 }
 
@@ -212,7 +249,7 @@ void battle_vblank(void)
     if (hp_changed) show_statbox();
 
     update_damage_texts();
-    oam_copy(oam_mem, oam_buf, 30);
+    oam_copy(oam_mem, oam_buf, 128);
     // Update player sprites
     for (int i = 0; i < party_size; i++)
     {
@@ -242,6 +279,7 @@ void initialize_parties()
         battle_party[i].character = &party[i];
         battle_party[i].disp_hp = party[i].stats.hp;
         battle_party[i].disp_mp = party[i].stats.mp;
+        battle_party[i].disp_sta = party[i].stats.sta;
         draw_sprite(i, &battle_party[i]);
     }
     for (int i = 0; i < enemies_size; i++)
@@ -295,7 +333,8 @@ void show_statbox()
         const int y = 16;
         // print_box(i * 8, 16, 8, 4);
         print(tile_start, x + 1, y, battle_party[i].character->name);
-        print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_hp);
+        // print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_hp);
+        print_num(tile_start + 5, x + 1, y + 1, battle_party[i].disp_sta);
         print_num(tile_start + 9, x + 5, y + 1,
                   battle_party[i].character->stats.max_hp);
         print_num(tile_start + 13, x + 1, y + 2, battle_party[i].disp_mp);

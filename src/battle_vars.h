@@ -3,6 +3,8 @@
 #include "global.h"
 #include "player.h"
 
+#define MAX_COMBO 20
+
 typedef enum ActionType
 {
     AT_NONE,
@@ -12,6 +14,8 @@ typedef enum ActionType
     AT_MOVE,
     AT_RETURN
 } ActionType;
+
+typedef enum AttackDir { ATK_NONE, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_RIGHT } AttackDir;
 
 typedef struct BattleCharacter
 {
@@ -42,6 +46,9 @@ typedef struct BattleCharacter
     int disp_hp;
     /** Used to display and animate the mp when casting a spell. */
     int disp_mp;
+    /** Currently displayed stamina value. */
+    int disp_sta;
+    int attack_combo[MAX_COMBO];
 } BattleCharacter;
 
 typedef struct DamageText

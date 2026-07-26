@@ -9,8 +9,12 @@
 #include "player.h"
 #include "text.h"
 #include "attackbar.h"
+#include "arrows.h"
 #include "attackbar_end.h"
 #include "borders.h"
+
+/** First OAM entry index for arrow sprites. */
+#define ARROW_SPRITE_INDEX 11
 
 #define VRAM_BATTLE_BAR (bordersTilesLen / 32 + VRAM_BORDERS)
 /** X position in tiles to show the battle bar. */
@@ -19,6 +23,8 @@
 #define BAR_Y 13
 /** VRAM offset where battle bar will be drawn. */
 #define BAR_LOCATION (32 * BAR_Y + BAR_X)
+/** OAM index of bar end sprite. */
+#define BAR_INDEX 31
 
 // --------------- public functions -------------------
 
@@ -133,13 +139,15 @@ void load_battlebar_tiles()
 {
     memcpy32(tile_mem[0] + VRAM_BATTLE_BAR, attackbarTiles,
              attackbarTilesLen / 4);
-    memcpy32(tile_mem_obj[1], attackbar_endTiles, attackbar_endTilesLen / 4);
+    memcpy32(&tile_mem_obj[1][0], attackbar_endTiles,
+             attackbar_endTilesLen / 4);
+    memcpy32(&tile_mem_obj[1][4], arrowsTiles, arrowsTilesLen / 4);
 }
 
 void draw_battlebar(const BattleCharacter *character)
 {
-    const int bar_size = character->character->stats.sta;
-    const int num_middle_bars = (bar_size - 6 + 8) >> 3;
+    const int bar_size = character->disp_sta;
+    const int num_middle_bars = (bar_size - 6) >> 3;
 
     // Draw left side + middle of battle bar
     se_mem[30][BAR_LOCATION] = VRAM_BATTLE_BAR;
@@ -149,17 +157,56 @@ void draw_battlebar(const BattleCharacter *character)
         se_mem[30][BAR_LOCATION + 1 + i] = VRAM_BATTLE_BAR + 2;
         se_mem[30][BAR_LOCATION + 1 + i + 32] = VRAM_BATTLE_BAR + 3;
     }
-    obj_set_attr(&oam_buf[11],
+    // Set up right side of battle bar, a sprite, which covers up the tilemap
+    // portion of the bar
+    obj_set_attr(&oam_buf[BAR_INDEX],
                  ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(BAR_Y * 8),
-                 ATTR1_SIZE_16x16 | ATTR1_X(BAR_X * 8 + bar_size),
-                 ATTR2_PALBANK(0) | ATTR2_PRIO(0) | 512);
+                 ATTR1_SIZE_16x16 | ATTR1_X(BAR_X * 8 + bar_size - 6),
+                 ATTR2_PALBANK(0) | ATTR2_PRIO(1) | 512);
 }
 
 void clear_battlebar()
 {
     memset32(&se_mem[30][BAR_LOCATION], 0, 20 / 2);
     memset32(&se_mem[30][BAR_LOCATION + 32], 0, 20 / 2);
-    obj_set_pos(&oam_buf[11], -16, -16);
+    obj_hide(&oam_buf[BAR_INDEX]);
+}
+
+void clear_attacks()
+{
+    memset32(&oam_buf[ARROW_SPRITE_INDEX], 0, MAX_COMBO);
+}
+
+bool add_attack(BattleCharacter *character, const AttackDir attack_dir,
+                const int index)
+{
+    if (index >= MAX_COMBO || (index + 1) * 7 > character->disp_sta) return false;
+    character->attack_combo[index] = attack_dir;
+    character->attack_combo[index + 1] = ATK_NONE;
+    obj_set_attr(&oam_buf[ARROW_SPRITE_INDEX + index],
+                 ATTR0_4BPP | ATTR0_REG | ATTR0_SQUARE | ATTR0_Y(BAR_Y * 8 + 1),
+                 ATTR1_SIZE_8x8 | ATTR1_X(BAR_X * 8 + 3 + index * 7),
+                 ATTR2_PALBANK(1) |
+                 ATTR2_PRIO(0) | (515 + attack_dir)
+    );
+    return true;
+}
+
+void remove_last_attack(BattleCharacter *character)
+{
+    for (int i = 0; i < 19; i++)
+    {
+        const AttackDir atk = character->attack_combo[i + 1];
+        if (atk == ATK_NONE)
+        {
+            character->attack_combo[i] = ATK_NONE;
+            obj_hide(&oam_buf[ARROW_SPRITE_INDEX + i]);
+            break;
+        }
+    }
+    // Automatically hide the last possible combo as a fallback
+    character->attack_combo[MAX_COMBO - 1] = ATK_NONE;
+    obj_hide(&oam_buf[ARROW_SPRITE_INDEX + MAX_COMBO - 1]);
 }
 
 // --------------- private functions -------------------

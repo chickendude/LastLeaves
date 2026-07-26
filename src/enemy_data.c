@@ -1,6 +1,6 @@
 #include "enemy_data.h"
 #include "lynne-battle.h"
-#include "roak-battle.h""
+#include "roak-battle.h"
 #include "tann-battle.h"
 
 // Graphics definitions
