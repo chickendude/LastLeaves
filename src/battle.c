@@ -302,6 +302,7 @@ void initialize_parties()
         enemy->frame_cycle = 0;
         draw_sprite(i, enemy);
         enemy->frame_cycle = 6 * i;
+        enemy->disp_sta = enemy->character->stats.sta;
     }
 }
 
@@ -316,6 +317,12 @@ void select_enemy_attacks()
         {
             target++;
             if (target >= party_size) target = 0;
+        }
+        const int stamina = enemies[i].disp_sta;
+        for (int j = 0; j < MAX_COMBO; j++)
+        {
+            if (j * 7 > stamina) break;
+            enemies[i].attack_combo[j] = random(4) + 1;
         }
         queue_add_action(AT_MOVE, &enemies[i], &battle_party[target]);
         queue_add_action(AT_ATTACK, &enemies[i], &battle_party[target]);
