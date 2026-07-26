@@ -180,7 +180,7 @@ void clear_battlebar()
 
 void clear_attacks()
 {
-    memset32(&oam_buf[ARROW_SPRITE_INDEX], 0, MAX_COMBO);
+    memset32(&oam_buf[ARROW_SPRITE_INDEX], 0, MAX_COMBO * sizeof(OBJ_ATTR) / 4);
 }
 
 bool add_attack(BattleCharacter *character, const AttackDir attack_dir,
