@@ -201,9 +201,9 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
         }
         if (key_hit(KEY_A))
         {
-            queue_add_action(AT_MOVE, character, &enemies[*target_enemy_index]);
-            queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index]);
-            queue_add_action(AT_RETURN, character, NULL);
+            queue_add_action(AT_MOVE, character, &enemies[*target_enemy_index], enemies, enemies_size);
+            queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index], enemies, enemies_size);
+            queue_add_action(AT_RETURN, character, NULL, NULL, 0);
             enemies[*target_enemy_index].is_targeted = false;
             success = 1;
             break;
@@ -324,9 +324,9 @@ void select_enemy_attacks()
             if (j * 7 > stamina) break;
             enemies[i].attack_combo[j] = random(4) + 1;
         }
-        queue_add_action(AT_MOVE, &enemies[i], &battle_party[target]);
-        queue_add_action(AT_ATTACK, &enemies[i], &battle_party[target]);
-        queue_add_action(AT_RETURN, &enemies[i], NULL);
+        queue_add_action(AT_MOVE, &enemies[i], &battle_party[target], battle_party, party_size);
+        queue_add_action(AT_ATTACK, &enemies[i], &battle_party[target], battle_party, party_size);
+        queue_add_action(AT_RETURN, &enemies[i], NULL, NULL, 0);
     }
 }
 

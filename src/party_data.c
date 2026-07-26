@@ -64,10 +64,10 @@ const PlayerData roak_data = {
     30,
     10,
     12,
-    7,
+    10,
     7,
     30,
-    10
+    14
 };
 
 const PlayerData lynne_data = {

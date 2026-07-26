@@ -23,8 +23,25 @@ void perform_battle_queue()
 {
     for (int i = 0; i < MAX_ACTIONS; i++)
     {
-        const BattleAction *action = &battle_queue[i];
+        BattleAction *action = &battle_queue[i];
+        // Make sure actor is still alive
         if (!action->actor->is_alive) continue;
+        // Make sure target is still alive and pick new target if not
+        if (action->target && !action->target->is_alive)
+        {
+            for (int j = 0; j < action->target_party_size; j++)
+            {
+                BattleCharacter *new_target = &action->target_party[j];
+                if (new_target->is_alive)
+                {
+                    action->target = new_target;
+                    break;
+                }
+            }
+        }
+        // If target is still not alive, there are no living targets left
+        if (!action->target->is_alive) return;
+
         switch (action->type)
         {
             case AT_ATTACK:
@@ -46,7 +63,9 @@ void perform_battle_queue()
 void queue_add_action(
     const ActionType type,
     BattleCharacter *actor,
-    BattleCharacter *target
+    BattleCharacter *target,
+    BattleCharacter *target_party,
+    const int target_party_size
 )
 {
     if (battle_queue_index == MAX_ACTIONS) return;
@@ -55,6 +74,8 @@ void queue_add_action(
     action->type = type;
     action->actor = actor;
     action->target = target;
+    action->target_party = target_party;
+    action->target_party_size = target_party_size;
 }
 
 // --------------- private functions -------------------

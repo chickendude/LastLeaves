@@ -67,6 +67,8 @@ typedef struct BattleAction
     ActionType type;
     BattleCharacter *actor;
     BattleCharacter *target;
+    BattleCharacter *target_party;
+    int target_party_size;
 } BattleAction;
 
 extern int battle_queue_index;
