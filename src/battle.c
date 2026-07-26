@@ -87,13 +87,13 @@ void battle()
 int start_battle()
 {
     clear_battle_queue();
-    // Which player is currently selecting moves, 0 < active_player < party_size
+    // The currently targeted enemy
     int target_enemy_index = 0;
     int battle_over = 0;
     while (!battle_over)
     {
         show_statbox();
-        BattleMenu selection = battle_start_menu();
+        const BattleMenu selection = battle_start_menu();
         if (selection == MENU_FLEE)
         {
             battle_over = 2;
@@ -109,8 +109,8 @@ int start_battle()
                 continue;
             }
 
-            const BattleMenu selection = battle_fight_menu();
-            switch (selection)
+            const BattleMenu fight_selection = battle_fight_menu();
+            switch (fight_selection)
             {
             case MENU_ATTACK:
                 // If B was pressed, restart selection
