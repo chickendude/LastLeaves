@@ -1,6 +1,8 @@
 #include "battle_menu.h"
 #include <tonc.h>
 
+#include "battle_gfx.h"
+#include "battle_vars.h"
 #include "text.h"
 
 // ------------------ Private Declarations --------------
@@ -84,5 +86,125 @@ BattleMenu battle_fight_menu()
     }
     memset32(&se_mem[30], 0, 240);
     return key_pressed;
+}
+
+MenuResult select_attack_menu(BattleCharacter *character)
+{
+    draw_battlebar(character);
+    // Prefill attack bar if we have a previous attack
+    if (character->attack_combo[0] != ATK_NONE)
+    {
+        draw_attack_sprites(character->attack_combo);
+    }
+    int success = RESULT_NONE;
+    int command_index = 0;
+    // Wait for attack directions to be made
+    while (true)
+    {
+        key_poll();
+        VBlankIntrWait();
+
+        // Check keys
+        bool attack_added = false;
+        if (key_hit(KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN) && command_index == 0)
+        {
+            clear_attackbar_sprites();
+        }
+        if (key_hit(KEY_LEFT))
+        {
+            attack_added = add_attack(character, ATK_LEFT, command_index);
+        } else if (key_hit(KEY_RIGHT))
+        {
+            attack_added = add_attack(character, ATK_RIGHT, command_index);
+        } else if (key_hit(KEY_UP))
+        {
+            attack_added = add_attack(character, ATK_HIGH, command_index);
+        } else if (key_hit(KEY_DOWN))
+        {
+            attack_added = add_attack(character, ATK_LOW, command_index);
+        }
+        if (attack_added) command_index++;
+
+        // Make sure there is at least one attack selected
+        if (key_hit(KEY_A) && character->attack_combo[0] != ATK_NONE)
+        {
+            success = RESULT_OK;
+            break;
+        }
+
+        // Clear the combo if attacks have been input, otherwise cancel the menu
+        if (key_hit(KEY_B))
+        {
+            if (command_index > 0)
+            {
+                remove_last_attack(character);
+                command_index--;
+            } else if (command_index == 0 &&
+                       character->attack_combo[0] != ATK_NONE)
+            {
+                character->attack_combo[0] = ATK_NONE;
+                clear_attackbar_sprites();
+            } else
+            {
+                success = RESULT_CANCEL;
+                break;
+            }
+        }
+    }
+    clear_battlebar();
+    clear_attackbar_sprites();
+    return success;
+}
+
+MenuResult select_target(int* target_enemy_index)
+{
+    int success = RESULT_NONE;
+    // Wait for attack directions to be made
+    while (true)
+    {
+        key_poll();
+        VBlankIntrWait();
+
+        // Check keys
+
+        if (key_hit(KEY_LEFT))
+        {
+            (*target_enemy_index)--;
+        } else if (key_hit(KEY_RIGHT))
+        {
+            (*target_enemy_index)++;
+        }
+
+        if (*target_enemy_index < 0) *target_enemy_index = enemies_size - 1;
+        for (int i = 0; i < enemies_size; i++)
+        {
+            if (enemies[*target_enemy_index].is_alive) break;
+            (*target_enemy_index)++;
+            if (*target_enemy_index >= enemies_size) *target_enemy_index = 0;
+        }
+
+        if (key_hit(KEY_A))
+        {
+            enemies[*target_enemy_index].is_targeted = false;
+            success = RESULT_OK;
+            break;
+        }
+        if (key_hit(KEY_B))
+        {
+            success = RESULT_CANCEL;
+            break;
+        }
+        // Check if enemy's getting selected in player attack selection
+        for (int i = 0; i < enemies_size; i++)
+        {
+            enemies[i].is_targeted = i == *target_enemy_index;
+        }
+    }
+    // Clear target for all enemies
+    for (int j = 0; j < enemies_size; j++)
+    {
+        enemies[j].is_targeted = false;
+    }
+    return success;
 }
 // ------------------ Private Functions -----------------

@@ -36,8 +36,6 @@ void clear_battle_queue(void);
  */
 MenuResult select_attack(BattleCharacter* character, int* target_enemy_index);
 
-MenuResult select_target(BattleCharacter* character, int* target_enemy_index);
-
 void select_enemy_attacks();
 
 /**
@@ -125,17 +123,7 @@ int start_battle()
                 case MENU_ATTACK:
                     // If B was pressed, restart selection
                     result = select_attack(character, &target_enemy_index);
-                    if (result == RESULT_OK)
-                    {
-                        result = select_target(character, &target_enemy_index);
-                        if (result == RESULT_OK)
-                        {
-                            queue_add_action(AT_MOVE, character, &enemies[target_enemy_index], enemies, enemies_size);
-                            queue_add_action(AT_ATTACK, character, &enemies[target_enemy_index], enemies, enemies_size);
-                            queue_add_action(AT_RETURN, character, NULL, NULL, 0);
-                            player_index++;
-                        }
-                    }
+                    if (result == RESULT_OK) player_index++;
                     break;
                 case MENU_ITEM:
                 case MENU_SPIRIT:
@@ -149,7 +137,9 @@ int start_battle()
             character->cur_x += FIXED_PIXEL * 8;
             character->cur_y += FIXED_PIXEL * 4;
         }
+        // If player_index < 0, we need to go back to the fight/flee menu
         if (player_index < 0) continue;
+
         select_enemy_attacks();
         perform_battle_queue();
         clear_battle_queue();
@@ -160,143 +150,24 @@ int start_battle()
     return battle_over;
 }
 
-MenuResult select_target(BattleCharacter* character, int* target_enemy_index)
-{
-    int success = RESULT_NONE;
-    // Wait for attack directions to be made
-    while (true)
-    {
-        key_poll();
-        VBlankIntrWait();
-
-        // Check keys
-
-        if (key_hit(KEY_LEFT))
-        {
-            (*target_enemy_index)--;
-        } else if (key_hit(KEY_RIGHT))
-        {
-            (*target_enemy_index)++;
-        }
-
-        if (*target_enemy_index < 0) *target_enemy_index = enemies_size - 1;
-        for (int i = 0; i < enemies_size; i++)
-        {
-            if (enemies[*target_enemy_index].is_alive) break;
-            (*target_enemy_index)++;
-            if (*target_enemy_index >= enemies_size) *target_enemy_index = 0;
-        }
-
-        if (key_hit(KEY_A))
-        {
-            enemies[*target_enemy_index].is_targeted = false;
-            success = RESULT_OK;
-            break;
-        }
-        if (key_hit(KEY_B))
-        {
-            success = RESULT_CANCEL;
-            break;
-        }
-        // Check if enemy's getting selected in player attack selection
-        for (int i = 0; i < enemies_size; i++)
-        {
-            enemies[i].is_targeted = i == *target_enemy_index;
-        }
-    }
-    // Clear target for all enemies
-    for (int j = 0; j < enemies_size; j++)
-    {
-        enemies[j].is_targeted = false;
-    }
-    return success;
-}
 
 MenuResult select_attack(BattleCharacter* character, int* target_enemy_index)
 {
-    draw_battlebar(character);
-    // Prefill attack bar if we have a previous attack
-    if (character->attack_combo[0] != ATK_NONE)
+    // Select combo
+    MenuResult result = select_attack_menu(character);
+    if (result == RESULT_CANCEL) return RESULT_CANCEL;
+
+    // Select target to attack
+    result = select_target(target_enemy_index);
+    if (result == RESULT_OK)
     {
-        draw_attack_sprites(character->attack_combo);
+        queue_add_action(AT_MOVE, character, &enemies[*target_enemy_index],
+                         enemies, enemies_size);
+        queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index],
+                         enemies, enemies_size);
+        queue_add_action(AT_RETURN, character, NULL, NULL, 0);
     }
-    int success = RESULT_NONE;
-    int command_index = 0;
-    // Wait for attack directions to be made
-    while (true)
-    {
-        key_poll();
-
-#ifdef DEBUG
-        int *sta = &character->disp_sta;
-        if (key_is_down(KEY_R))
-        {
-            if (*sta < MAX_COMBO * 7) (*sta)++;
-            clear_battlebar();
-            draw_battlebar(character);
-            show_statbox();
-        } else if (key_is_down(KEY_L))
-        {
-            if (*sta > 10) (*sta)--;
-            clear_battlebar();
-            draw_battlebar(character);
-            show_statbox();
-        }
-#endif
-
-        VBlankIntrWait();
-
-        // Check keys
-
-        bool attack_added = false;
-        if (key_hit(KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN) && command_index == 0)
-        {
-            clear_attackbar_sprites();
-        }
-        if (key_hit(KEY_LEFT))
-        {
-            attack_added = add_attack(character, ATK_LEFT, command_index);
-        } else if (key_hit(KEY_RIGHT))
-        {
-            attack_added = add_attack(character, ATK_RIGHT, command_index);
-        } else if (key_hit(KEY_UP))
-        {
-            attack_added = add_attack(character, ATK_HIGH, command_index);
-        } else if (key_hit(KEY_DOWN))
-        {
-            attack_added = add_attack(character, ATK_LOW, command_index);
-        }
-        if (attack_added) command_index++;
-
-        // Make sure there is at least one attack selected
-        if (key_hit(KEY_A) && character->attack_combo[0] != ATK_NONE)
-        {
-            success = RESULT_OK;
-            break;
-        }
-
-        // Clear the combo if attacks have been input, otherwise cancel the menu
-        if (key_hit(KEY_B))
-        {
-            if (command_index > 0)
-            {
-                remove_last_attack(character);
-                command_index--;
-            } else if (command_index == 0 &&
-                       character->attack_combo[0] != ATK_NONE)
-            {
-                character->attack_combo[0] = ATK_NONE;
-                clear_attackbar_sprites();
-            } else
-            {
-                success = RESULT_CANCEL;
-                break;
-            }
-        }
-    }
-    clear_battlebar();
-    clear_attackbar_sprites();
-    return success;
+    return result;
 }
 
 void battle_vblank(void)
