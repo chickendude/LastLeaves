@@ -61,9 +61,18 @@ BattleMenu battle_fight_menu()
         {
             key_pressed = MENU_ATTACK;
         }
-        else if (key_hit(KEY_RIGHT))
+        else if (key_hit(KEY_UP))
+        {
+            key_pressed = MENU_ITEM;
+        } else if (key_hit(KEY_RIGHT))
+        {
+            key_pressed = MENU_MAGIC;
+        } else if (key_hit(KEY_DOWN))
         {
             key_pressed = MENU_SPIRIT;
+        } else if (key_hit(KEY_B))
+        {
+            break;
         }
     }
     unsigned int keys = key_curr_state();

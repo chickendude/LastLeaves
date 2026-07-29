@@ -31,9 +31,9 @@ void initialize_parties(void);
 void clear_battle_queue(void);
 
 /** Select an attack.
- * @returns 0 = no attack selected, 1 = attack selected
+ * @returns RESULT_OK if selection made, RESULT_CANCEL if action was cancelled
  */
-int select_attack(BattleCharacter* character, int* target_enemy_index);
+MenuResult select_attack(BattleCharacter* character, int* target_enemy_index);
 
 void select_enemy_attacks();
 
@@ -100,7 +100,7 @@ int start_battle()
             break;
         }
         int player_index = 0;
-        while (player_index < party_size)
+        while (player_index >= 0 && player_index < party_size)
         {
             BattleCharacter* character = &battle_party[player_index];
             if (!character->is_alive)
@@ -109,20 +109,37 @@ int start_battle()
                 continue;
             }
 
+            // Move player forward to show they are attacking
+            character->cur_x -= FIXED_PIXEL * 8;
+            character->cur_y -= FIXED_PIXEL * 4;
+
+            // Show the fight/flee menu
             const BattleMenu fight_selection = battle_fight_menu();
+
+            MenuResult result;
             switch (fight_selection)
             {
-            case MENU_ATTACK:
-                // If B was pressed, restart selection
-                if (select_attack(character, &target_enemy_index)) player_index++;
-                break;
-            case MENU_ITEM:
-            case MENU_SPIRIT:
-            case MENU_MAGIC:
-            default:
-                break;
+                case MENU_ATTACK:
+                    // If B was pressed, restart selection
+                    result = select_attack(character, &target_enemy_index);
+                    if (result == RESULT_OK)
+                    {
+                        player_index++;
+                    }
+                    break;
+                case MENU_ITEM:
+                case MENU_SPIRIT:
+                case MENU_MAGIC:
+                case MENU_NONE: // Battle Menu was cancelled
+                    player_index--;
+                default:
+                    break;
             }
+            // Move player back
+            character->cur_x += FIXED_PIXEL * 8;
+            character->cur_y += FIXED_PIXEL * 4;
         }
+        if (player_index < 0) continue;
         select_enemy_attacks();
         perform_battle_queue();
         clear_battle_queue();
@@ -133,7 +150,7 @@ int start_battle()
     return battle_over;
 }
 
-int select_attack(BattleCharacter* character, int* target_enemy_index)
+MenuResult select_attack(BattleCharacter* character, int* target_enemy_index)
 {
     draw_battlebar(character);
     // Prefill attack bar if we have a previous attack
@@ -141,8 +158,9 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
     {
         draw_attack_sprites(character->attack_combo);
     }
-    int success = 0;
+    int success = RESULT_NONE;
     int command_index = 0;
+    // Wait for attack directions to be made
     while (true)
     {
         key_poll();
@@ -165,19 +183,6 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
 #endif
 
         VBlankIntrWait();
-        // Simple animation to show which character is selected
-        // TODO: Not really needed anymore
-        character->cur_y -= character->vel_y;
-        const int off_y = character->y - character->cur_y;
-        character->vel_y += character->vel_y;
-        if (fxpt_to_int(off_y) > 5)
-        {
-            character->vel_y = -25;
-        }
-        else if (off_y <= 0)
-        {
-            character->vel_y = 25;
-        }
 
         // Check keys
 
@@ -214,7 +219,7 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
             queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index], enemies, enemies_size);
             queue_add_action(AT_RETURN, character, NULL, NULL, 0);
             enemies[*target_enemy_index].is_targeted = false;
-            success = 1;
+            success = RESULT_OK;
             break;
         }
         if (key_hit(KEY_B))
@@ -229,7 +234,7 @@ int select_attack(BattleCharacter* character, int* target_enemy_index)
                 clear_attackbar_sprites();
             } else
             {
-                success = 0;
+                success = RESULT_CANCEL;
                 break;
             }
         }
