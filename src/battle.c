@@ -34,7 +34,7 @@ void clear_battle_queue(void);
  * Input your attack directions for this character.
  * @returns RESULT_OK if selection made, RESULT_CANCEL if action was cancelled
  */
-MenuResult select_attack(BattleCharacter* character, int* target_enemy_index);
+MenuResult select_attack(BattleCharacter *character, int *target_enemy_index);
 
 void select_enemy_attacks();
 
@@ -50,15 +50,15 @@ void show_statbox(void);
  * Checks if all members in a party (player or enemy) are dead.
  * @returns 1 if they are all dead, 0 if at least one member is still alive.
  */
-int are_all_dead(const BattleCharacter* characters, int size);
+int are_all_dead(const BattleCharacter *characters, int size);
 
 /**
  * Adjusts a player character's display HP to shift towards their current HP.
  * @param character The (player) character whose display HP should be adjusted.
  */
-bool update_hp(BattleCharacter* character);
+bool update_hp(BattleCharacter *character);
 
-void load_enemy_data(Player* enemy, const PlayerData* enemy_data);
+void load_enemy_data(Player *enemy, const PlayerData *enemy_data);
 
 // --------------- public functions -------------------
 
@@ -103,7 +103,7 @@ int start_battle()
         int player_index = 0;
         while (player_index >= 0 && player_index < party_size)
         {
-            BattleCharacter* character = &battle_party[player_index];
+            BattleCharacter *character = &battle_party[player_index];
             if (!character->is_alive)
             {
                 player_index++;
@@ -129,7 +129,14 @@ int start_battle()
                 case MENU_SPIRIT:
                 case MENU_MAGIC:
                 case MENU_NONE: // Battle Menu was cancelled
-                    player_index--;
+                    // Set index to previous living player and remove previous
+                    // characters' attacks so that they don't get two turns
+                    while (--player_index >= 0 &&
+                           !battle_party[player_index].is_alive)
+                    {
+                    }
+                    queue_remove_player_actions(&battle_party[player_index]);
+                    break;
                 default:
                     break;
             }
@@ -151,7 +158,7 @@ int start_battle()
 }
 
 
-MenuResult select_attack(BattleCharacter* character, int* target_enemy_index)
+MenuResult select_attack(BattleCharacter *character, int *target_enemy_index)
 {
     // Select combo
     MenuResult result = select_attack_menu(character);
@@ -218,7 +225,7 @@ void initialize_parties()
     }
     for (int i = 0; i < enemies_size; i++)
     {
-        BattleCharacter* enemy = &enemies[i];
+        BattleCharacter *enemy = &enemies[i];
         load_enemy_data(enemies[i].character, &enemy_data[i]);
         enemy->animation = &enemy->character->graphics->idle;
         enemy->index = i + party_size;
@@ -258,8 +265,10 @@ void select_enemy_attacks()
             if (j * 7 > stamina) break;
             enemies[i].attack_combo[j] = random(4) + 1;
         }
-        queue_add_action(AT_MOVE, &enemies[i], &battle_party[target], battle_party, party_size);
-        queue_add_action(AT_ATTACK, &enemies[i], &battle_party[target], battle_party, party_size);
+        queue_add_action(AT_MOVE, &enemies[i], &battle_party[target],
+                         battle_party, party_size);
+        queue_add_action(AT_ATTACK, &enemies[i], &battle_party[target],
+                         battle_party, party_size);
         queue_add_action(AT_RETURN, &enemies[i], NULL, NULL, 0);
     }
 }
@@ -283,7 +292,7 @@ void show_statbox()
     }
 }
 
-int are_all_dead(const BattleCharacter* characters, const int size)
+int are_all_dead(const BattleCharacter *characters, const int size)
 {
     int num_dead = 0;
     for (int i = 0; i < size; i++)
@@ -293,15 +302,14 @@ int are_all_dead(const BattleCharacter* characters, const int size)
     return num_dead == size;
 }
 
-bool update_hp(BattleCharacter* character)
+bool update_hp(BattleCharacter *character)
 {
     bool changed = 0;
     if (character->disp_hp < character->character->stats.hp)
     {
         character->disp_hp++;
         changed = true;
-    }
-    else if (character->disp_hp > character->character->stats.hp)
+    } else if (character->disp_hp > character->character->stats.hp)
     {
         character->disp_hp--;
         changed = true;
@@ -330,31 +338,7 @@ void draw_map()
     }
 }
 
-void clear_battle_queue()
-{
-    battle_queue_index = 0;
-    for (int i = 0; i < MAX_ACTIONS; i++)
-    {
-        battle_queue[i].type = AT_NONE;
-    }
-    for (int i = 0; i < party_size; i++)
-    {
-        BattleCharacter* character = &battle_party[i];
-        character->priority = 2;
-        character->vel_y = 0;
-        character->vel_x = 0;
-    }
-    // Update enemies
-    for (int i = 0; i < enemies_size; i++)
-    {
-        BattleCharacter* enemy = &enemies[i];
-        enemy->priority = 2;
-        enemy->vel_y = 0;
-        enemy->vel_x = 0;
-    }
-}
-
-void load_enemy_data(Player* enemy, const PlayerData* enemy_data)
+void load_enemy_data(Player *enemy, const PlayerData *enemy_data)
 {
     memcpy16(enemy->name, enemy_data->name, 10 / 2);
     enemy->graphics = enemy_data->graphics;
