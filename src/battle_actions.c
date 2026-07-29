@@ -78,6 +78,38 @@ void queue_add_action(
     action->target_party_size = target_party_size;
 }
 
+void queue_remove_player_actions(const BattleCharacter *actor)
+{
+    for (int i = 0; i < MAX_ACTIONS; i++)
+    {
+        if (battle_queue[i].actor == actor) battle_queue[i].type = AT_NONE;
+    }
+}
+
+void clear_battle_queue()
+{
+    battle_queue_index = 0;
+    for (int i = 0; i < MAX_ACTIONS; i++)
+    {
+        battle_queue[i].type = AT_NONE;
+    }
+    for (int i = 0; i < party_size; i++)
+    {
+        BattleCharacter *character = &battle_party[i];
+        character->priority = 2;
+        character->vel_y = 0;
+        character->vel_x = 0;
+    }
+    // Update enemies
+    for (int i = 0; i < enemies_size; i++)
+    {
+        BattleCharacter *enemy = &enemies[i];
+        enemy->priority = 2;
+        enemy->vel_y = 0;
+        enemy->vel_x = 0;
+    }
+}
+
 // --------------- private functions -------------------
 
 void perform_attack(const BattleAction *action)

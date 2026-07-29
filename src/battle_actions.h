@@ -12,4 +12,8 @@ void queue_add_action(
     int target_party_size
 );
 
+void queue_remove_player_actions(const BattleCharacter *actor);
+
+void clear_battle_queue();
+
 #endif //LASTLEAVES_BATTLE_ACTIONS_H
