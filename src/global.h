@@ -2,6 +2,15 @@
 #define LASTLEAVES_GLOBAL_H
 #include <tonc_types.h>
 
+typedef enum MenuResult
+{
+    RESULT_NONE, RESULT_OK, RESULT_CANCEL
+} MenuResult;
+
+//  Defines missing from tonc.
+/** ALPHA option for REG_BLDCNT / BLD_BUILD. */
+#define FADE_ALPHA 1
+
 /** Buffer for OAM entries so we can update the OAM outside of VBlank. */
 extern OBJ_ATTR oam_buf[128];
 

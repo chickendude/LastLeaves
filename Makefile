@@ -39,6 +39,7 @@ CFLAGS	:=	-g -Wall -O2\
 
 CFLAGS	+=	$(INCLUDE)
 
+CPPFLAGS :=
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
@@ -129,8 +130,10 @@ clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).gba $(TARGET).sav
 
-
 all: $(BUILD)
+
+debug:
+	@$(MAKE) CPPFLAGS=-DDEBUG
 #---------------------------------------------------------------------------------
 else
 

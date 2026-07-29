@@ -30,10 +30,11 @@ void initialize_parties(void);
 
 void clear_battle_queue(void);
 
-/** Select an attack.
- * @returns 0 = no attack selected, 1 = attack selected
+/**
+ * Input your attack directions for this character.
+ * @returns RESULT_OK if selection made, RESULT_CANCEL if action was cancelled
  */
-int select_attack(BattleCharacter* character, int* target_enemy_index);
+MenuResult select_attack(BattleCharacter* character, int* target_enemy_index);
 
 void select_enemy_attacks();
 
@@ -65,18 +66,17 @@ void battle()
 {
     // Enable mode 0 (4 layers) and only show BG0 for map and BG3 for text
     REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG3 | DCNT_OBJ | DCNT_OBJ_1D;
-    REG_BG0CNT = BG_CBB(0) | BG_SBB(SBB) | BG_PRIO(2) | BG_REG_32x32 | BG_4BPP;
+    REG_BG0CNT = BG_CBB(0) | BG_SBB(SBB) | BG_PRIO(3) | BG_REG_32x32 | BG_4BPP;
     REG_BG0HOFS = 0;
     REG_BG0VOFS = 0;
-    REG_BG3CNT = BG_CBB(0) | BG_SBB(30) | BG_PRIO(0) | BG_REG_32x32 | BG_4BPP;
+    REG_BG3CNT = BG_CBB(0) | BG_SBB(30) | BG_PRIO(1) | BG_REG_32x32 | BG_4BPP;
     REG_BG3HOFS = 0;
     REG_BG3VOFS = 0;
-
-    // TODO: Load character and enemy bitmaps based off of party and enemy list
 
     draw_map();
     initialize_parties();
     load_number_tiles();
+    load_battlebar_tiles();
     irq_add(II_VBLANK, battle_vblank);
     start_battle();
     irq_delete(II_VBLANK);
@@ -88,38 +88,58 @@ void battle()
 int start_battle()
 {
     clear_battle_queue();
-    // Which player is currently selecting moves, 0 < active_player < party_size
+    // The currently targeted enemy
     int target_enemy_index = 0;
     int battle_over = 0;
     while (!battle_over)
     {
         show_statbox();
-        BattleMenu selection = battle_start_menu();
+        const BattleMenu selection = battle_start_menu();
         if (selection == MENU_FLEE)
         {
             battle_over = 2;
             break;
         }
         int player_index = 0;
-        while (player_index < party_size)
+        while (player_index >= 0 && player_index < party_size)
         {
             BattleCharacter* character = &battle_party[player_index];
-            if (!character->is_alive) continue;
-
-            const BattleMenu selection = battle_fight_menu();
-            switch (selection)
+            if (!character->is_alive)
             {
-            case MENU_ATTACK:
-                // If B was pressed, restart selection
-                if (select_attack(character, &target_enemy_index)) player_index++;
-                break;
-            case MENU_ITEM:
-            case MENU_SPIRIT:
-            case MENU_MAGIC:
-            default:
-                break;
+                player_index++;
+                continue;
             }
+
+            // Move player forward to show they are attacking
+            character->cur_x -= FIXED_PIXEL * 8;
+            character->cur_y -= FIXED_PIXEL * 4;
+
+            // Show the fight/flee menu
+            const BattleMenu fight_selection = battle_fight_menu();
+
+            MenuResult result;
+            switch (fight_selection)
+            {
+                case MENU_ATTACK:
+                    // If B was pressed, restart selection
+                    result = select_attack(character, &target_enemy_index);
+                    if (result == RESULT_OK) player_index++;
+                    break;
+                case MENU_ITEM:
+                case MENU_SPIRIT:
+                case MENU_MAGIC:
+                case MENU_NONE: // Battle Menu was cancelled
+                    player_index--;
+                default:
+                    break;
+            }
+            // Move player back
+            character->cur_x += FIXED_PIXEL * 8;
+            character->cur_y += FIXED_PIXEL * 4;
         }
+        // If player_index < 0, we need to go back to the fight/flee menu
+        if (player_index < 0) continue;
+
         select_enemy_attacks();
         perform_battle_queue();
         clear_battle_queue();
@@ -130,70 +150,24 @@ int start_battle()
     return battle_over;
 }
 
-int select_attack(BattleCharacter* character, int* target_enemy_index)
+
+MenuResult select_attack(BattleCharacter* character, int* target_enemy_index)
 {
-    int success = 0;
-    while (true)
-    {
-        key_poll();
-        VBlankIntrWait();
-        // Simple animation to show which character is selected
-        // TODO: Not really needed anymore
-        character->cur_y -= character->vel_y;
-        const int off_y = character->y - character->cur_y;
-        character->vel_y += character->vel_y;
-        if (fxpt_to_int(off_y) > 5)
-        {
-            character->vel_y = -25;
-        }
-        else if (off_y <= 0)
-        {
-            character->vel_y = 25;
-        }
+    // Select combo
+    MenuResult result = select_attack_menu(character);
+    if (result == RESULT_CANCEL) return RESULT_CANCEL;
 
-        // Check keys
-
-        if (key_hit(KEY_LEFT))
-        {
-            (*target_enemy_index)--;
-        }
-        if (key_hit(KEY_RIGHT))
-        {
-            (*target_enemy_index)++;
-        }
-        if (*target_enemy_index < 0) *target_enemy_index = enemies_size - 1;
-        for (int i = 0; i < enemies_size; i++)
-        {
-            if (enemies[*target_enemy_index].is_alive) break;
-            (*target_enemy_index)++;
-            if (*target_enemy_index >= enemies_size) *target_enemy_index = 0;
-        }
-        if (key_hit(KEY_A))
-        {
-            queue_add_action(AT_MOVE, character, &enemies[*target_enemy_index]);
-            queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index]);
-            queue_add_action(AT_RETURN, character, NULL);
-            enemies[*target_enemy_index].is_targeted = false;
-            success = 1;
-            break;
-        }
-        if (key_hit(KEY_B))
-        {
-            success = 0;
-            break;
-        }
-        // Check if enemy's getting selected in player attack selection
-        for (int i = 0; i < enemies_size; i++)
-        {
-            enemies[i].is_targeted = i == *target_enemy_index;
-        }
-    }
-    // Clear target for all enemies
-    for (int j = 0; j < enemies_size; j++)
+    // Select target to attack
+    result = select_target(target_enemy_index);
+    if (result == RESULT_OK)
     {
-        enemies[j].is_targeted = false;
+        queue_add_action(AT_MOVE, character, &enemies[*target_enemy_index],
+                         enemies, enemies_size);
+        queue_add_action(AT_ATTACK, character, &enemies[*target_enemy_index],
+                         enemies, enemies_size);
+        queue_add_action(AT_RETURN, character, NULL, NULL, 0);
     }
-    return success;
+    return result;
 }
 
 void battle_vblank(void)
@@ -209,7 +183,7 @@ void battle_vblank(void)
     if (hp_changed) show_statbox();
 
     update_damage_texts();
-    oam_copy(oam_mem, oam_buf, 30);
+    oam_copy(oam_mem, oam_buf, 128);
     // Update player sprites
     for (int i = 0; i < party_size; i++)
     {
@@ -239,6 +213,7 @@ void initialize_parties()
         battle_party[i].character = &party[i];
         battle_party[i].disp_hp = party[i].stats.hp;
         battle_party[i].disp_mp = party[i].stats.mp;
+        battle_party[i].disp_sta = party[i].stats.sta;
         draw_sprite(i, &battle_party[i]);
     }
     for (int i = 0; i < enemies_size; i++)
@@ -261,6 +236,7 @@ void initialize_parties()
         enemy->frame_cycle = 0;
         draw_sprite(i, enemy);
         enemy->frame_cycle = 6 * i;
+        enemy->disp_sta = enemy->character->stats.sta;
     }
 }
 
@@ -276,9 +252,15 @@ void select_enemy_attacks()
             target++;
             if (target >= party_size) target = 0;
         }
-        queue_add_action(AT_MOVE, &enemies[i], &battle_party[target]);
-        queue_add_action(AT_ATTACK, &enemies[i], &battle_party[target]);
-        queue_add_action(AT_RETURN, &enemies[i], NULL);
+        const int stamina = enemies[i].disp_sta;
+        for (int j = 0; j < MAX_COMBO; j++)
+        {
+            if (j * 7 > stamina) break;
+            enemies[i].attack_combo[j] = random(4) + 1;
+        }
+        queue_add_action(AT_MOVE, &enemies[i], &battle_party[target], battle_party, party_size);
+        queue_add_action(AT_ATTACK, &enemies[i], &battle_party[target], battle_party, party_size);
+        queue_add_action(AT_RETURN, &enemies[i], NULL, NULL, 0);
     }
 }
 

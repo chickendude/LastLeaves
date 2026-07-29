@@ -1,6 +1,6 @@
 #include "enemy_data.h"
 #include "lynne-battle.h"
-#include "roak-battle.h""
+#include "roak-battle.h"
 #include "tann-battle.h"
 
 // Graphics definitions
@@ -56,7 +56,7 @@ const PlayerData enemy1_data = {
     8,
     8,
     30,
-    10
+    21
 };
 
 const PlayerData enemy2_data = {
@@ -69,7 +69,7 @@ const PlayerData enemy2_data = {
     7,
     7,
     30,
-    10
+    14
 };
 
 const PlayerData enemy3_data = {
@@ -82,7 +82,7 @@ const PlayerData enemy3_data = {
     7,
     7,
     30,
-    10
+    7
 };
 
 const PlayerData enemy_data[NUM_ENEMIES] = {enemy1_data, enemy2_data, enemy3_data};

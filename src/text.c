@@ -203,8 +203,9 @@ void print(const int tile_start, const int x, const int y, const char *text)
     }
 }
 
-void print_num(const int tile_start, const int x, const int y, const int number)
+void print_num(const int tile_start, const int x, const int y, int number)
 {
+    if (number < 0) number = 0;
     int digits[8];
     const int num_digits = count_digits(number, digits);
     char number_string[8];

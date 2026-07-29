@@ -1,7 +1,6 @@
 #include "party_data.h"
 
 #include "lynne-battle.h"
-#include "player.h"
 #include "roak-battle.h"
 #include "tann-battle.h"
 
@@ -54,7 +53,7 @@ const PlayerData tann_data = {
     8,
     8,
     30,
-    10
+    30
 };
 
 const PlayerData roak_data = {
@@ -64,10 +63,10 @@ const PlayerData roak_data = {
     30,
     10,
     12,
-    7,
+    10,
     7,
     30,
-    10
+    14
 };
 
 const PlayerData lynne_data = {
@@ -80,5 +79,5 @@ const PlayerData lynne_data = {
     7,
     5,
     35,
-    13
+    23
 };

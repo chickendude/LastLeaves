@@ -23,8 +23,25 @@ void perform_battle_queue()
 {
     for (int i = 0; i < MAX_ACTIONS; i++)
     {
-        const BattleAction *action = &battle_queue[i];
+        BattleAction *action = &battle_queue[i];
+        // Make sure actor is still alive
         if (!action->actor->is_alive) continue;
+        // Make sure target is still alive and pick new target if not
+        if (action->target && !action->target->is_alive)
+        {
+            for (int j = 0; j < action->target_party_size; j++)
+            {
+                BattleCharacter *new_target = &action->target_party[j];
+                if (new_target->is_alive)
+                {
+                    action->target = new_target;
+                    break;
+                }
+            }
+        }
+        // If target is still not alive, there are no living targets left
+        if (!action->target->is_alive) return;
+
         switch (action->type)
         {
             case AT_ATTACK:
@@ -46,7 +63,9 @@ void perform_battle_queue()
 void queue_add_action(
     const ActionType type,
     BattleCharacter *actor,
-    BattleCharacter *target
+    BattleCharacter *target,
+    BattleCharacter *target_party,
+    const int target_party_size
 )
 {
     if (battle_queue_index == MAX_ACTIONS) return;
@@ -55,25 +74,33 @@ void queue_add_action(
     action->type = type;
     action->actor = actor;
     action->target = target;
+    action->target_party = target_party;
+    action->target_party_size = target_party_size;
 }
 
 // --------------- private functions -------------------
 
 void perform_attack(const BattleAction *action)
 {
-    BattleCharacter *target = action->target;
-    BattleCharacter *actor = action->actor;
-    Stats *stats = &action->target->character->stats;
-    stats->hp -= 15;
-    if (stats->hp <= 0)
+    const BattleCharacter *target = action->target;
+    const BattleCharacter *actor = action->actor;
+    Stats *actor_stats = &actor->character->stats;
+    Stats *target_stats = &action->target->character->stats;
+    int attack_index = 0;
+    AttackDir attack_dir = actor->attack_combo[attack_index];
+    while (attack_dir != ATK_NONE)
     {
-        stats->hp = 0;
+        const int dmg = actor_stats->atk + random((actor_stats->atk >> 2) + 1);
+        target_stats->hp -= dmg;
+        attack_dir = action->actor->attack_combo[++attack_index];
+        draw_damage(dmg, target->x + fxpt(8), target->y);
+        VBlankIntrDelay(30);
+    }
+    if (target_stats->hp <= 0)
+    {
+        target_stats->hp = 0;
         action->target->is_alive = false;
     }
-    actor->priority = 1;
-    target->priority = 2;
-    draw_damage(15, target->x + fxpt(8), target->y);
-    for (int j = 0; j < 60; j++) VBlankIntrWait();
 }
 
 void perform_move(const BattleAction *action)
