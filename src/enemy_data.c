@@ -15,7 +15,32 @@ const PlayerGraphics enemy1_graphics = {
         .sprite_data = tann_battleTiles + 128 * 3,
         .frame_cycles = {3, 2, 2, 3, 2, 2},
         .num_frames = 6
-    }
+    },
+    .hit = {
+        .sprite_data = tann_battleTiles + 128 * 9,
+        .frame_cycles = {10},
+        .num_frames = 1
+    },
+    .attack_left = {
+        .sprite_data = lynne_battleTiles + 128 * 12,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_right = {
+        .sprite_data = lynne_battleTiles + 128 * 14,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
+    .attack_up = {
+        .sprite_data = lynne_battleTiles + 128 * 15,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_down = {
+        .sprite_data = lynne_battleTiles + 128 * 17,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
 };
 
 const PlayerGraphics enemy2_graphics = {
@@ -28,7 +53,32 @@ const PlayerGraphics enemy2_graphics = {
         .sprite_data = roak_battleTiles + 128 * 2,
         .frame_cycles = {3, 3},
         .num_frames = 2
-    }
+    },
+    .hit = {
+        .sprite_data = roak_battleTiles + 128 * 4,
+        .frame_cycles = {10},
+        .num_frames = 1
+    },
+    .attack_left = {
+        .sprite_data = lynne_battleTiles + 128 * 12,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_right = {
+        .sprite_data = lynne_battleTiles + 128 * 14,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
+    .attack_up = {
+        .sprite_data = lynne_battleTiles + 128 * 15,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_down = {
+        .sprite_data = lynne_battleTiles + 128 * 17,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
 };
 
 const PlayerGraphics enemy3_graphics = {
@@ -41,7 +91,32 @@ const PlayerGraphics enemy3_graphics = {
         .sprite_data = lynne_battleTiles + 128 * 2,
         .frame_cycles = {3, 3},
         .num_frames = 2
-    }
+    },
+    .hit = {
+        .sprite_data = lynne_battleTiles + 128 * 10,
+        .frame_cycles = {10, 5},
+        .num_frames = 2
+    },
+    .attack_left = {
+        .sprite_data = lynne_battleTiles + 128 * 12,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_right = {
+        .sprite_data = lynne_battleTiles + 128 * 14,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
+    .attack_up = {
+        .sprite_data = lynne_battleTiles + 128 * 15,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_down = {
+        .sprite_data = lynne_battleTiles + 128 * 17,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
 };
 
 // Data definitions

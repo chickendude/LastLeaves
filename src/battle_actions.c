@@ -17,6 +17,8 @@ void perform_return(const BattleAction *action);
 void move_character(BattleCharacter *character, int target_x, int target_y,
                     int steps);
 
+void wait_for_animation_finish(const BattleCharacter *actor, BattleCharacter *target);
+
 // --------------- public functions -------------------
 
 void perform_battle_queue()
@@ -114,19 +116,44 @@ void clear_battle_queue()
 
 void perform_attack(const BattleAction *action)
 {
-    const BattleCharacter *target = action->target;
-    const BattleCharacter *actor = action->actor;
+    BattleCharacter *target = action->target;
+    BattleCharacter *actor = action->actor;
     Stats *actor_stats = &actor->character->stats;
     Stats *target_stats = &action->target->character->stats;
     int attack_index = 0;
     AttackDir attack_dir = actor->attack_combo[attack_index];
     while (attack_dir != ATK_NONE)
     {
+        actor->frame_index = 0;
+        actor->frame_cycle = 0;
+        target->frame_index = 0;
+        target->frame_cycle = 0;
+        switch (attack_dir)
+        {
+            case ATK_LEFT:
+                actor->animation = &actor->character->graphics->attack_left;
+                break;
+            case ATK_RIGHT:
+                actor->animation = &actor->character->graphics->attack_right;
+                break;
+            case ATK_HIGH:
+                actor->animation = &actor->character->graphics->attack_up;
+                break;
+            case ATK_LOW:
+                actor->animation = &actor->character->graphics->attack_down;
+                break;
+            default:
+                actor->animation = &actor->character->graphics->idle;
+                break;
+        }
+        target->animation = &target->character->graphics->hit;
         const int dmg = actor_stats->atk + random((actor_stats->atk >> 2) + 1);
         target_stats->hp -= dmg;
         attack_dir = action->actor->attack_combo[++attack_index];
         draw_damage(dmg, target->x + fxpt(8), target->y);
-        VBlankIntrDelay(30);
+        wait_for_animation_finish(actor, target);
+        actor->animation = &actor->character->graphics->idle;
+        VBlankIntrDelay(10);
     }
     if (target_stats->hp <= 0)
     {
@@ -195,4 +222,19 @@ void move_character(
     character->frame_index = 0;
     draw_sprite(actor_id, character);
     VBlankIntrWait();
+}
+
+void wait_for_animation_finish(const BattleCharacter *actor, BattleCharacter *target)
+{
+    // Wait for the animation to loop, frame_cycle and frame_index are updated
+    // in the battle_vblank() function, so after first vblank frame_cycle == 1
+    while (true)
+    {
+        VBlankIntrWait();
+        if (actor->frame_index == 0 && actor->frame_cycle == 0) return;
+        if (target->frame_index == 0 && target->frame_cycle == 0)
+        {
+            target->animation = &target->character->graphics->idle;
+        }
+    }
 }
