@@ -17,7 +17,7 @@ void perform_return(const BattleAction *action);
 void move_character(BattleCharacter *character, int target_x, int target_y,
                     int steps);
 
-void wait_for_animation_finish(const BattleCharacter *character);
+void wait_for_animation_finish(const BattleCharacter *actor, BattleCharacter *target);
 
 // --------------- public functions -------------------
 
@@ -116,7 +116,7 @@ void clear_battle_queue()
 
 void perform_attack(const BattleAction *action)
 {
-    const BattleCharacter *target = action->target;
+    BattleCharacter *target = action->target;
     BattleCharacter *actor = action->actor;
     Stats *actor_stats = &actor->character->stats;
     Stats *target_stats = &action->target->character->stats;
@@ -126,6 +126,8 @@ void perform_attack(const BattleAction *action)
     {
         actor->frame_index = 0;
         actor->frame_cycle = 0;
+        target->frame_index = 0;
+        target->frame_cycle = 0;
         switch (attack_dir)
         {
             case ATK_LEFT:
@@ -144,11 +146,12 @@ void perform_attack(const BattleAction *action)
                 actor->animation = &actor->character->graphics->idle;
                 break;
         }
+        target->animation = &target->character->graphics->hit;
         const int dmg = actor_stats->atk + random((actor_stats->atk >> 2) + 1);
         target_stats->hp -= dmg;
         attack_dir = action->actor->attack_combo[++attack_index];
         draw_damage(dmg, target->x + fxpt(8), target->y);
-        wait_for_animation_finish(actor);
+        wait_for_animation_finish(actor, target);
         actor->animation = &actor->character->graphics->idle;
         VBlankIntrDelay(10);
     }
@@ -221,13 +224,17 @@ void move_character(
     VBlankIntrWait();
 }
 
-void wait_for_animation_finish(const BattleCharacter *character)
+void wait_for_animation_finish(const BattleCharacter *actor, BattleCharacter *target)
 {
     // Wait for the animation to loop, frame_cycle and frame_index are updated
     // in the battle_vblank() function, so after first vblank frame_cycle == 1
     while (true)
     {
         VBlankIntrWait();
-        if (character->frame_index == 0 && character->frame_cycle == 0) return;
+        if (actor->frame_index == 0 && actor->frame_cycle == 0) return;
+        if (target->frame_index == 0 && target->frame_cycle == 0)
+        {
+            target->animation = &target->character->graphics->idle;
+        }
     }
 }

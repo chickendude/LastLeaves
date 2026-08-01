@@ -13,6 +13,7 @@ typedef struct PlayerGraphics
 {
     Animation idle;
     Animation walk;
+    Animation hit;
     Animation attack_left;
     Animation attack_right;
     Animation attack_up;
