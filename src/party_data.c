@@ -12,10 +12,30 @@ const PlayerGraphics tann_graphics = {
         .num_frames = 3
     },
     .walk = {
-        .sprite_data = tann_battleTiles + 128*3,
+        .sprite_data = tann_battleTiles + 128 * 3,
         .frame_cycles = {3, 2, 2, 3, 2, 2},
         .num_frames = 6
-    }
+    },
+    .attack_left = {
+        .sprite_data = lynne_battleTiles + 128 * 10,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_right = {
+        .sprite_data = lynne_battleTiles + 128 * 12,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
+    .attack_up = {
+        .sprite_data = lynne_battleTiles + 128 * 13,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_down = {
+        .sprite_data = lynne_battleTiles + 128 * 15,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
 };
 
 const PlayerGraphics roak_graphics = {
@@ -25,10 +45,30 @@ const PlayerGraphics roak_graphics = {
         .num_frames = 2
     },
     .walk = {
-        .sprite_data = roak_battleTiles + 128*2,
+        .sprite_data = roak_battleTiles + 128 * 2,
         .frame_cycles = {3, 3},
         .num_frames = 2
-    }
+    },
+    .attack_left = {
+        .sprite_data = lynne_battleTiles + 128 * 10,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_right = {
+        .sprite_data = lynne_battleTiles + 128 * 12,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
+    .attack_up = {
+        .sprite_data = lynne_battleTiles + 128 * 13,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_down = {
+        .sprite_data = lynne_battleTiles + 128 * 15,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
 };
 
 const PlayerGraphics lynne_graphics = {
@@ -38,11 +78,32 @@ const PlayerGraphics lynne_graphics = {
         .num_frames = 4
     },
     .walk = {
-        .sprite_data = lynne_battleTiles + 128*4,
+        .sprite_data = lynne_battleTiles + 128 * 4,
         .frame_cycles = {3, 2, 2, 3, 2, 2},
         .num_frames = 6
-    }
+    },
+    .attack_left = {
+        .sprite_data = lynne_battleTiles + 128 * 10,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_right = {
+        .sprite_data = lynne_battleTiles + 128 * 12,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
+    .attack_up = {
+        .sprite_data = lynne_battleTiles + 128 * 13,
+        .frame_cycles = {30, 5},
+        .num_frames = 2
+    },
+    .attack_down = {
+        .sprite_data = lynne_battleTiles + 128 * 15,
+        .frame_cycles = {30},
+        .num_frames = 1
+    },
 };
+
 const PlayerData tann_data = {
     &tann_graphics,
     "Tann",
