@@ -23,4 +23,7 @@ extern OBJ_ATTR oam_buf[128];
 /** Number of frames to display damage text in battles. */
 #define DAMAGE_TEXT_FRAMES 40
 
+/** Maximum number of players in the party. */
+#define MAX_PARTY_SIZE 3
+
 #endif //LASTLEAVES_GLOBAL_H

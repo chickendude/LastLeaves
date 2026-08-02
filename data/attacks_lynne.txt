@@ -1,0 +1,9 @@
+; LRUD: Left Right Up Down
+Sweeper     , UUD
+Left Strike , RLL
+Round Kick  , RDLU
+Cannon Gash , DUUD
+Wonder Spin ,DUDR
+Blind Fist  ,UDUL
+Whirlpool   ,LRLLD
+Jump Kick   ,DDULU
