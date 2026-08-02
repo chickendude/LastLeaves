@@ -1,10 +1,16 @@
 #include "party_data.h"
 #include <tonc.h>
 
+#include "../battle_vars.h"
 #include "lynne-battle.h"
 #include "roak-battle.h"
 #include "tann-battle.h"
 
+const Combo tann_whirl = {
+    .animation = {
+    },
+    .combo = {ATK_HIGH, ATK_LOW}
+};
 
 const PlayerGraphics tann_graphics = {
     .idle = {

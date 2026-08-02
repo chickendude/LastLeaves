@@ -1,6 +1,6 @@
 #ifndef LASTLEAVES_PLAYER_H
 #define LASTLEAVES_PLAYER_H
-#include "party_data.h"
+#include "data/party_data.h"
 #include "stats.h"
 
 typedef enum PlayerType

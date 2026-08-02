@@ -2,7 +2,7 @@
 
 #include <tonc.h>
 
-#include "party_data.h"
+#include "data/party_data.h"
 
 // ----------------------- Private Function Definitions ------------------------
 

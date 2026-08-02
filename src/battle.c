@@ -6,7 +6,7 @@
 #include "battle_gfx.h"
 #include "battle_menu.h"
 #include "battle_vars.h"
-#include "enemy_data.h"
+#include "data/enemy_data.h"
 #include "global.h"
 #include "math.h"
 #include "player.h"
