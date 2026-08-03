@@ -3,7 +3,7 @@ Late Hit    ,LUL
 Armored Fury,URR
 Sky Breaker ,RDLU
 Petal Blade ,DUDR
-Heavy Core  ,LULD
+Heavy Core  ,LUDL
 Slash Punch ,RDUD
 Anger Kick  ,DRUUL
 Pummel Kick ,LDULU

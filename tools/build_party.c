@@ -123,14 +123,18 @@ int main()
 
 void write_combos(FILE *f, const ComboData *combo)
 {
-    for (int i = 0; i < 10; i++)
+    // The combos are stored in reverse as it makes it easier to check them in
+    // battle
+    for (int i = 9; i >= 0; i--)
     {
         const AttackDir dir = combo->attacks[i];
+        if (dir == ATK_NONE) continue;
+
         if (dir == ATK_HIGH) fprintf(f, "ATK_HIGH");
         else if (dir == ATK_LOW) fprintf(f, "ATK_LOW");
         else if (dir == ATK_LEFT) fprintf(f, "ATK_LEFT");
         else if (dir == ATK_RIGHT) fprintf(f, "ATK_RIGHT");
-        if (i < 9 && combo->attacks[i + 1] != ATK_NONE) fprintf(f, ", ");
+        if (i > 0/* && combo->attacks[i + 1] != ATK_NONE*/) fprintf(f, ", ");
     }
 }
 

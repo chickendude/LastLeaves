@@ -10,4 +10,11 @@ typedef struct Combo
     const AttackDir combo[10];
 } Combo;
 
+const Combo* is_combo(
+    const AttackDir *attack_array,
+    int index,
+    const Combo *combos,
+    int num_combos
+);
+
 #endif //LASTLEAVES_COMBO_H

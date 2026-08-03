@@ -7,6 +7,7 @@
 #include "global.h"
 #include "math.h"
 #include "party.h"
+#include "text.h"
 
 void perform_attack(const BattleAction *action);
 
@@ -17,7 +18,8 @@ void perform_return(const BattleAction *action);
 void move_character(BattleCharacter *character, int target_x, int target_y,
                     int steps);
 
-void wait_for_animation_finish(const BattleCharacter *actor, BattleCharacter *target);
+void wait_for_animation_finish(const BattleCharacter *actor,
+                               BattleCharacter *target);
 
 // --------------- public functions -------------------
 
@@ -118,12 +120,20 @@ void perform_attack(const BattleAction *action)
 {
     BattleCharacter *target = action->target;
     BattleCharacter *actor = action->actor;
-    Stats *actor_stats = &actor->character->stats;
+    const Stats *actor_stats = &actor->character->stats;
     Stats *target_stats = &action->target->character->stats;
     int attack_index = 0;
     AttackDir attack_dir = actor->attack_combo[attack_index];
     while (attack_dir != ATK_NONE)
     {
+        const Combo *combo = is_combo(actor->attack_combo, attack_index,
+            actor->character->combos, actor->character->num_combos);
+        if (combo != NULL)
+        {
+            print_box(8, 10, 12, 3);
+            print(0, 9, 11, combo->name);
+        }
+        // Reset animation frames
         actor->frame_index = 0;
         actor->frame_cycle = 0;
         target->frame_index = 0;
@@ -154,6 +164,7 @@ void perform_attack(const BattleAction *action)
         wait_for_animation_finish(actor, target);
         actor->animation = &actor->character->graphics->idle;
         VBlankIntrDelay(10);
+    memset32(&se_mem[30], 0, 224);
     }
     if (target_stats->hp <= 0)
     {
@@ -224,7 +235,8 @@ void move_character(
     VBlankIntrWait();
 }
 
-void wait_for_animation_finish(const BattleCharacter *actor, BattleCharacter *target)
+void wait_for_animation_finish(const BattleCharacter *actor,
+                               BattleCharacter *target)
 {
     // Wait for the animation to loop, frame_cycle and frame_index are updated
     // in the battle_vblank() function, so after first vblank frame_cycle == 1
