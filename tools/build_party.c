@@ -1,10 +1,11 @@
 #include <ctype.h>
+#undef tolower
+#undef toupper
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "global.h"
-#include "battle_vars.h"
 
 const char output_filename_c[] = "../src/data/party_combos.c";
 const char output_filename_h[] = "../src/data/party_combos.h";
@@ -29,9 +30,11 @@ ComboData combos[3][15];
 
 int read_buffer(FILE *f, int player_index);
 
-void convert_to_variable_name(char *attack_name, char *variable_name);
+void convert_to_variable_name(const char *attack_name, char *variable_name);
 
 void write_combos(FILE *f, const ComboData *combo);
+
+char *capitalize(const char *string);
 
 int main()
 {
@@ -39,16 +42,11 @@ int main()
     {
         const char *filename = filenames[i];
         FILE *f = fopen(filename, "r");
-
-        fseek(f, 0L, SEEK_END);
-        const long filesize = ftell(f);
-        fseek(f, 0L, SEEK_SET);
         if (read_buffer(f, i))
         {
             printf("\nError parsing text.\n");
             return 0;
         }
-
         fclose(f);
     }
 
@@ -101,8 +99,14 @@ int main()
         }
 
         // Write full combo array
-        fprintf(file_h, "\nextern const Combo combos_%s[%d];\n\n", character_name, combo_count);
-        fprintf(file_c, "const Combo combos_%s[%d] = { ", character_name, combo_count);
+        char *character_name_upper = capitalize(character_name);
+        fprintf(file_h, "\n#define NUM_COMBOS_%s %d\n", character_name_upper,
+                combo_count);
+        fprintf(file_h, "extern const Combo combos_%s[NUM_COMBOS_%s];\n\n",
+                character_name, character_name_upper);
+        free(character_name_upper);
+        fprintf(file_c, "const Combo combos_%s[%d] = { ", character_name,
+                combo_count);
         for (int j = 0; j < 10; j++)
         {
             ComboData *combo = &combos[i][j];
@@ -207,12 +211,22 @@ int read_buffer(FILE *f, int player_index)
     return 0;
 }
 
-#undef tolower
-void convert_to_variable_name(char *attack_name, char *variable_name)
+void convert_to_variable_name(const char *attack_name, char *variable_name)
 {
     for (int i = 0; attack_name[i]; i++)
     {
         const char letter = (char) tolower(attack_name[i]);
         variable_name[i] = letter == ' ' ? '_' : letter;
     }
+}
+
+char *capitalize(const char *string)
+{
+    char *capitalized_string = malloc(strlen(string));
+    for (int i = 0; i < strlen(string - 1); i++)
+    {
+        capitalized_string[i] = (char) toupper(string[i]);
+    }
+    capitalized_string[strlen(string)] = '\0';
+    return capitalized_string;
 }

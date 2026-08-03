@@ -20,6 +20,7 @@ typedef struct PlayerGraphics
 typedef struct PlayerData {
     const PlayerGraphics *graphics;
     const Combo *combos;
+    int num_combos;
     char name[10];
     /** Level **/
     int level;

@@ -12,7 +12,8 @@ extern const Combo combo_lynne_blind_fist;
 extern const Combo combo_lynne_whirlpool;
 extern const Combo combo_lynne_jump_kick;
 
-extern const Combo combos_lynne[8];
+#define NUM_COMBOS_LYNNE 8
+extern const Combo combos_lynne[NUM_COMBOS_LYNNE];
 
 extern const Combo combo_roak_board_smash;
 extern const Combo combo_roak_wild_punch;
@@ -23,7 +24,8 @@ extern const Combo combo_roak_light_flow;
 extern const Combo combo_roak_chain_stop;
 extern const Combo combo_roak_time_blow;
 
-extern const Combo combos_roak[8];
+#define NUM_COMBOS_ROAK 8
+extern const Combo combos_roak[NUM_COMBOS_ROAK];
 
 extern const Combo combo_tann_late_hit;
 extern const Combo combo_tann_armored_fury;
@@ -34,6 +36,7 @@ extern const Combo combo_tann_slash_punch;
 extern const Combo combo_tann_anger_kick;
 extern const Combo combo_tann_pummel_kick;
 
-extern const Combo combos_tann[8];
+#define NUM_COMBOS_TANN 8
+extern const Combo combos_tann[NUM_COMBOS_TANN];
 
 #endif //LASTLEAVES_PARTY_COMBOS_H

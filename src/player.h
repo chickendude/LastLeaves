@@ -11,6 +11,8 @@ typedef enum PlayerType
 typedef struct Player
 {
     char name[10];
+    const Combo *combos;
+    int num_combos;
     PlayerType type;
     const PlayerGraphics *graphics;
     Stats stats;

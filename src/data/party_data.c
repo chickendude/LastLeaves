@@ -122,6 +122,7 @@ const PlayerGraphics lynne_graphics = {
 const PlayerData tann_data = {
     &tann_graphics,
     combos_tann,
+    NUM_COMBOS_TANN,
     .name = "Tann",
     .level = 50,
     .max_hp = 25,
@@ -136,6 +137,7 @@ const PlayerData tann_data = {
 const PlayerData roak_data = {
     &roak_graphics,
     combos_roak,
+    NUM_COMBOS_ROAK,
     "Roak",
     45,
     30,
@@ -150,6 +152,7 @@ const PlayerData roak_data = {
 const PlayerData lynne_data = {
     &lynne_graphics,
     combos_lynne,
+    NUM_COMBOS_LYNNE,
     "Lynne",
     55,
     17,

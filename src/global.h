@@ -20,6 +20,9 @@ typedef enum AttackDir
 extern OBJ_ATTR oam_buf[128];
 
 /** Max number of actions that can take place in a battle each turn. */
+#define MAX_COMBOS 15
+
+/** Max number of actions that can take place in a battle each turn. */
 #define MAX_ACTIONS 40
 
 /** Max number of damage texts that can be shown at once. */
