@@ -7,6 +7,11 @@ typedef enum MenuResult
     RESULT_NONE, RESULT_OK, RESULT_CANCEL
 } MenuResult;
 
+typedef enum AttackDir
+{
+    ATK_NONE, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_RIGHT
+} AttackDir;
+
 //  Defines missing from tonc.
 /** ALPHA option for REG_BLDCNT / BLD_BUILD. */
 #define FADE_ALPHA 1

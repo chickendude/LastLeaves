@@ -53,6 +53,8 @@ const Combo combo_lynne_jump_kick = {
     .combo = {ATK_LOW, ATK_LOW, ATK_HIGH, ATK_LEFT, ATK_HIGH}
 };
 
+const Combo combos_lynne[8] = { combo_lynne_sweeper, combo_lynne_left_strike, combo_lynne_round_kick, combo_lynne_cannon_gash, combo_lynne_wonder_spin, combo_lynne_blind_fist, combo_lynne_whirlpool, combo_lynne_jump_kick, };
+
 // roak
 
 const Combo combo_roak_board_smash = {
@@ -103,6 +105,8 @@ const Combo combo_roak_time_blow = {
     .combo = {ATK_RIGHT, ATK_LOW, ATK_LEFT, ATK_LEFT, ATK_RIGHT}
 };
 
+const Combo combos_roak[8] = { combo_roak_board_smash, combo_roak_wild_punch, combo_roak_shakedown, combo_roak_seize, combo_roak_windfall, combo_roak_light_flow, combo_roak_chain_stop, combo_roak_time_blow, };
+
 // tann
 
 const Combo combo_tann_late_hit = {
@@ -152,4 +156,6 @@ const Combo combo_tann_pummel_kick = {
     .animation = {},
     .combo = {ATK_LEFT, ATK_LOW, ATK_HIGH, ATK_LEFT, ATK_HIGH}
 };
+
+const Combo combos_tann[8] = { combo_tann_late_hit, combo_tann_armored_fury, combo_tann_sky_breaker, combo_tann_petal_blade, combo_tann_heavy_core, combo_tann_slash_punch, combo_tann_anger_kick, combo_tann_pummel_kick, };
 

@@ -1,16 +1,9 @@
 #include "party_data.h"
-#include <tonc.h>
 
-#include "../battle_vars.h"
 #include "lynne-battle.h"
+#include "party_combos.h"
 #include "roak-battle.h"
 #include "tann-battle.h"
-
-const Combo tann_whirl = {
-    .animation = {
-    },
-    .combo = {ATK_HIGH, ATK_LOW}
-};
 
 const PlayerGraphics tann_graphics = {
     .idle = {
@@ -128,19 +121,21 @@ const PlayerGraphics lynne_graphics = {
 
 const PlayerData tann_data = {
     &tann_graphics,
-    "Tann",
-    50,
-    25,
-    10,
-    10,
-    8,
-    8,
-    30,
-    30
+    combos_tann,
+    .name = "Tann",
+    .level = 50,
+    .max_hp = 25,
+    .max_mp = 10,
+    .max_cp = 10,
+    .atk = 8,
+    .def = 8,
+    .mag = 30,
+    .sta = 30
 };
 
 const PlayerData roak_data = {
     &roak_graphics,
+    combos_roak,
     "Roak",
     45,
     30,
@@ -154,6 +149,7 @@ const PlayerData roak_data = {
 
 const PlayerData lynne_data = {
     &lynne_graphics,
+    combos_lynne,
     "Lynne",
     55,
     17,

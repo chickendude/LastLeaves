@@ -123,6 +123,7 @@ const PlayerGraphics enemy3_graphics = {
 
 const PlayerData enemy1_data = {
     &enemy1_graphics,
+    NULL,
     "Monster 1",
     50,
     25,
@@ -136,6 +137,7 @@ const PlayerData enemy1_data = {
 
 const PlayerData enemy2_data = {
     &enemy2_graphics,
+    NULL,
     "Guard",
     45,
     30,
@@ -149,6 +151,7 @@ const PlayerData enemy2_data = {
 
 const PlayerData enemy3_data = {
     &enemy3_graphics,
+    NULL,
     "Shifu",
     45,
     30,

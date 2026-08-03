@@ -15,15 +15,6 @@ typedef enum ActionType
     AT_RETURN
 } ActionType;
 
-typedef enum AttackDir { ATK_NONE, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_RIGHT } AttackDir;
-
-typedef struct Combo
-{
-    char name[20];
-    Animation animation;
-    const AttackDir combo[10];
-} Combo;
-
 typedef struct BattleCharacter
 {
     Player *character;

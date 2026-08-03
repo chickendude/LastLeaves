@@ -65,8 +65,11 @@ int main()
         "#ifndef LASTLEAVES_PARTY_COMBOS_H\n#define LASTLEAVES_PARTY_COMBOS_H\n\n"
         "#include \"../battle_vars.h\"\n\n"
     );
+
+    // Loop through each character's combos
     for (int i = 0; i < MAX_PARTY_SIZE; i++)
     {
+        int combo_count = 0;
         // Create copy of filename to work with
         char input_filename[40];
         strcpy(input_filename, filenames[i]);
@@ -84,6 +87,7 @@ int main()
         {
             ComboData *combo = &combos[i][j];
             if (combo->name[0] == '\0') continue;
+            combo_count++;
             fprintf(file_h, "extern const Combo combo_%s_%s;\n", character_name,
                     combo->variable_name);
             fprintf(file_c, "const Combo combo_%s_%s = {\n", character_name,
@@ -95,6 +99,18 @@ int main()
             fprintf(file_c, "}\n");
             fprintf(file_c, "};\n\n");
         }
+
+        // Write full combo array
+        fprintf(file_h, "\nextern const Combo combos_%s[%d];\n\n", character_name, combo_count);
+        fprintf(file_c, "const Combo combos_%s[%d] = { ", character_name, combo_count);
+        for (int j = 0; j < 10; j++)
+        {
+            ComboData *combo = &combos[i][j];
+            if (combo->name[0] == '\0') continue;
+            fprintf(file_c, "combo_%s_%s, ", character_name,
+                    combo->variable_name);
+        }
+        fprintf(file_c, "};\n\n");
     }
     fprintf(file_h, "#endif //LASTLEAVES_PARTY_COMBOS_H");
     fclose(file_h);
@@ -160,26 +176,31 @@ int read_buffer(FILE *f, int player_index)
             {
                 case 'u':
                 case 'U':
-                    combos[player_index][combo_index].attacks[attack_index++] = ATK_HIGH;
+                    combos[player_index][combo_index].attacks[attack_index++] =
+                            ATK_HIGH;
                     break;
                 case 'd':
                 case 'D':
-                    combos[player_index][combo_index].attacks[attack_index++] = ATK_LOW;
+                    combos[player_index][combo_index].attacks[attack_index++] =
+                            ATK_LOW;
                     break;
                 case 'r':
                 case 'R':
-                    combos[player_index][combo_index].attacks[attack_index++] = ATK_RIGHT;
+                    combos[player_index][combo_index].attacks[attack_index++] =
+                            ATK_RIGHT;
                     break;
                 case 'l':
                 case 'L':
-                    combos[player_index][combo_index].attacks[attack_index++] = ATK_LEFT;
+                    combos[player_index][combo_index].attacks[attack_index++] =
+                            ATK_LEFT;
                     break;
                 default:
                     break;
             }
         }
         convert_to_variable_name(combos[player_index][combo_index].name,
-                                 combos[player_index][combo_index].variable_name);
+                                 combos[player_index][combo_index].
+                                 variable_name);
         combos[player_index][combo_index].attacks[attack_index] = ATK_NONE;
         combo_index++;
     }
