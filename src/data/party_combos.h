@@ -33,7 +33,7 @@ extern const Combo combo_tann_sky_breaker;
 extern const Combo combo_tann_petal_blade;
 extern const Combo combo_tann_heavy_core;
 extern const Combo combo_tann_slash_punch;
-extern const Combo combo_tann_anger_kick;
+extern const Combo combo_tann_frustration;
 extern const Combo combo_tann_pummel_kick;
 
 #define NUM_COMBOS_TANN 8

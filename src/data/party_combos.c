@@ -145,8 +145,8 @@ const Combo combo_tann_slash_punch = {
     .combo = {ATK_LOW, ATK_HIGH, ATK_LOW, ATK_RIGHT}
 };
 
-const Combo combo_tann_anger_kick = {
-    .name = "Anger Kick",
+const Combo combo_tann_frustration = {
+    .name = "Frustration",
     .animation = {},
     .combo = {ATK_LEFT, ATK_HIGH, ATK_HIGH, ATK_RIGHT, ATK_LOW}
 };
@@ -157,5 +157,5 @@ const Combo combo_tann_pummel_kick = {
     .combo = {ATK_HIGH, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_LEFT}
 };
 
-const Combo combos_tann[8] = { combo_tann_late_hit, combo_tann_armored_fury, combo_tann_sky_breaker, combo_tann_petal_blade, combo_tann_heavy_core, combo_tann_slash_punch, combo_tann_anger_kick, combo_tann_pummel_kick, };
+const Combo combos_tann[8] = { combo_tann_late_hit, combo_tann_armored_fury, combo_tann_sky_breaker, combo_tann_petal_blade, combo_tann_heavy_core, combo_tann_slash_punch, combo_tann_frustration, combo_tann_pummel_kick, };
 
