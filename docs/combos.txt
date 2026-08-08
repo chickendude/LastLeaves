@@ -1,0 +1,8 @@
+Ideas on how combo length could affect damage calculation.
+
+Combo   Hits  Modifier
+-----   ----  --------
+3       1     100-200%
+4       2     150-250%
+5       3     200-300%
+6       4     250-350%
