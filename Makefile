@@ -25,7 +25,7 @@ BUILD		:= build
 SOURCES		:= src src/data maps/battle
 INCLUDES	:= . build src
 DATA		:=
-GRAPHICS	:= gfx gfx/characters gfx/battle gfx/text
+GRAPHICS	:= gfx gfx/characters gfx/battle gfx/text gfx/characters/combos
 MUSIC		:=
 
 #---------------------------------------------------------------------------------
