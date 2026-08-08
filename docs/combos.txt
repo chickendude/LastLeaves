@@ -6,3 +6,10 @@ Combo   Hits  Modifier
 4       2     150-250%
 5       3     200-300%
 6       4     250-350%
+
+How to add a combo:
+1. Add the png (and aseprite) + grit file in gfx/characters/combos and run make
+   (so that the header files are created in build/)
+2. Update the corresponding text file for the character in data/attacks_[...].txt
+3. Run tools/build_party.c to create the C data from the text files
+4. Add the header includes for the new sprite data to src/data/combo_sprites.h
