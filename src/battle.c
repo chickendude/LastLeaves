@@ -263,7 +263,7 @@ void select_enemy_attacks()
         for (int j = 0; j < MAX_COMBO; j++)
         {
             if (j * 7 > stamina) break;
-            enemies[i].attack_combo[j] = random(4) + 1;
+            enemies[i].attacks[j] = random(4) + 1;
         }
         queue_add_action(AT_MOVE, &enemies[i], &battle_party[target],
                          battle_party, party_size);

@@ -188,8 +188,8 @@ bool add_attack(BattleCharacter *character, const AttackDir attack_dir,
 {
     if (index >= MAX_COMBO || (index + 1) * 7 > character->disp_sta) return
             false;
-    character->attack_combo[index] = attack_dir;
-    character->attack_combo[index + 1] = ATK_NONE;
+    character->attacks[index] = attack_dir;
+    character->attacks[index + 1] = ATK_NONE;
     obj_set_attr(&oam_buf[ARROW_SPRITE_INDEX + index],
                  ATTR0_4BPP | ATTR0_REG | ATTR0_SQUARE | ATTR0_Y(BAR_Y * 8 + 1),
                  ATTR1_SIZE_8x8 | ATTR1_X(BAR_X * 8 + 3 + index * 7),
@@ -218,16 +218,16 @@ void remove_last_attack(BattleCharacter *character)
 {
     for (int i = 0; i < 19; i++)
     {
-        const AttackDir atk = character->attack_combo[i + 1];
+        const AttackDir atk = character->attacks[i + 1];
         if (atk == ATK_NONE)
         {
-            character->attack_combo[i] = ATK_NONE;
+            character->attacks[i] = ATK_NONE;
             obj_hide(&oam_buf[ARROW_SPRITE_INDEX + i]);
             break;
         }
     }
     // Automatically hide the last possible combo as a fallback
-    character->attack_combo[MAX_COMBO - 1] = ATK_NONE;
+    character->attacks[MAX_COMBO - 1] = ATK_NONE;
     obj_hide(&oam_buf[ARROW_SPRITE_INDEX + MAX_COMBO - 1]);
 }
 

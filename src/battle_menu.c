@@ -92,9 +92,9 @@ MenuResult select_attack_menu(BattleCharacter *character)
 {
     draw_battlebar(character);
     // Prefill attack bar if we have a previous attack
-    if (character->attack_combo[0] != ATK_NONE)
+    if (character->attacks[0] != ATK_NONE)
     {
-        draw_attack_sprites(character->attack_combo);
+        draw_attack_sprites(character->attacks);
     }
     int success = RESULT_NONE;
     int command_index = 0;
@@ -126,7 +126,7 @@ MenuResult select_attack_menu(BattleCharacter *character)
         if (attack_added) command_index++;
 
         // Make sure there is at least one attack selected
-        if (key_hit(KEY_A) && character->attack_combo[0] != ATK_NONE)
+        if (key_hit(KEY_A) && character->attacks[0] != ATK_NONE)
         {
             success = RESULT_OK;
             break;
@@ -140,9 +140,9 @@ MenuResult select_attack_menu(BattleCharacter *character)
                 remove_last_attack(character);
                 command_index--;
             } else if (command_index == 0 &&
-                       character->attack_combo[0] != ATK_NONE)
+                       character->attacks[0] != ATK_NONE)
             {
-                character->attack_combo[0] = ATK_NONE;
+                character->attacks[0] = ATK_NONE;
                 clear_attackbar_sprites();
             } else
             {

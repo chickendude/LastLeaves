@@ -11,6 +11,14 @@
 
 void perform_attack(const BattleAction *action);
 
+/** Handles a single, physical attack. */
+void perform_physical_attack(AttackDir attack_dir, BattleCharacter *actor,
+                             BattleCharacter *target);
+
+/** Handles combo. Runs on the last hit of the combo. */
+void perform_combo(const Combo *combo, BattleCharacter *actor,
+                   BattleCharacter *target);
+
 void perform_move(const BattleAction *action);
 
 void perform_return(const BattleAction *action);
@@ -120,58 +128,83 @@ void perform_attack(const BattleAction *action)
 {
     BattleCharacter *target = action->target;
     BattleCharacter *actor = action->actor;
-    const Stats *actor_stats = &actor->character->stats;
     Stats *target_stats = &action->target->character->stats;
     int attack_index = 0;
-    AttackDir attack_dir = actor->attack_combo[attack_index];
+    AttackDir attack_dir = actor->attacks[attack_index];
     while (attack_dir != ATK_NONE)
     {
-        const Combo *combo = is_combo(actor->attack_combo, attack_index,
-            actor->character->combos, actor->character->num_combos);
-        if (combo != NULL)
-        {
-            print_box(8, 10, 12, 3);
-            print(0, 9, 11, combo->name);
-        }
         // Reset animation frames
         actor->frame_index = 0;
         actor->frame_cycle = 0;
         target->frame_index = 0;
         target->frame_cycle = 0;
-        switch (attack_dir)
+
+        // Check for a combo
+        const Combo *combo = is_combo(actor->attacks, attack_index,
+                                      actor->character->combos,
+                                      actor->character->num_combos);
+        if (combo != NULL)
         {
-            case ATK_LEFT:
-                actor->animation = &actor->character->graphics->attack_left;
-                break;
-            case ATK_RIGHT:
-                actor->animation = &actor->character->graphics->attack_right;
-                break;
-            case ATK_HIGH:
-                actor->animation = &actor->character->graphics->attack_up;
-                break;
-            case ATK_LOW:
-                actor->animation = &actor->character->graphics->attack_down;
-                break;
-            default:
-                actor->animation = &actor->character->graphics->idle;
-                break;
+            perform_combo(combo, actor, target);
+        } else
+        {
+            perform_physical_attack(attack_dir, actor, target);
         }
-        target->animation = &target->character->graphics->hit;
-        const int dmg = actor_stats->atk + random((actor_stats->atk >> 2) + 1);
-        target_stats->hp -= dmg;
-        attack_dir = action->actor->attack_combo[++attack_index];
-        draw_damage(dmg, target->x + fxpt(8), target->y);
-        wait_for_animation_finish(actor, target);
-        actor->animation = &actor->character->graphics->idle;
-        VBlankIntrDelay(10);
-    memset32(&se_mem[30], 0, 224);
+
+        attack_dir = actor->attacks[++attack_index];
     }
+
+    // Check if target was killed
     if (target_stats->hp <= 0)
     {
         target_stats->hp = 0;
         action->target->is_alive = false;
     }
 }
+
+void perform_combo(const Combo *combo, BattleCharacter *actor,
+                             BattleCharacter *target)
+{
+    print_box(8, 10, 12, 3);
+    print(0, 9, 11, combo->name);
+    VBlankIntrDelay(60);
+    memset32(&se_mem[30], 0, 224);
+    actor->animation = &combo->animation;
+    VBlankIntrDelay(60);
+}
+
+void perform_physical_attack(const AttackDir attack_dir, BattleCharacter *actor,
+                             BattleCharacter *target)
+{
+    const Stats *actor_stats = &actor->character->stats;
+    Stats *target_stats = &target->character->stats;
+    switch (attack_dir)
+    {
+        case ATK_LEFT:
+            actor->animation = &actor->character->graphics->attack_left;
+            break;
+        case ATK_RIGHT:
+            actor->animation = &actor->character->graphics->attack_right;
+            break;
+        case ATK_HIGH:
+            actor->animation = &actor->character->graphics->attack_up;
+            break;
+        case ATK_LOW:
+            actor->animation = &actor->character->graphics->attack_down;
+            break;
+        default:
+            actor->animation = &actor->character->graphics->idle;
+            break;
+    }
+    target->animation = &target->character->graphics->hit;
+    const int dmg = actor_stats->atk + random((actor_stats->atk >> 2) + 1);
+    target_stats->hp -= dmg;
+    draw_damage(dmg, target->x + fxpt(8), target->y);
+    wait_for_animation_finish(actor, target);
+    actor->animation = &actor->character->graphics->idle;
+    VBlankIntrDelay(10);
+}
+
 
 void perform_move(const BattleAction *action)
 {

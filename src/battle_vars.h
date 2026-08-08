@@ -46,7 +46,8 @@ typedef struct BattleCharacter
     int disp_mp;
     /** Currently displayed stamina value. */
     int disp_sta;
-    AttackDir attack_combo[MAX_COMBO + 1];
+    /** The array of attacks the character will perform this turn. */
+    AttackDir attacks[MAX_COMBO + 1];
 } BattleCharacter;
 
 typedef struct DamageText
