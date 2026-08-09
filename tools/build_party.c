@@ -1,6 +1,7 @@
 #include <ctype.h>
 #undef tolower
 #undef toupper
+#undef isalpha
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +15,11 @@ typedef struct ComboData
 {
     char name[20];
     char variable_name[30];
+    char animation_name[40];
+    int frame_counts[10];
+    int num_frames;
     AttackDir attacks[10];
+    int num_attacks;
 } ComboData;
 
 char *filenames[MAX_PARTY_SIZE] = {
@@ -36,6 +41,8 @@ void write_combos(FILE *f, const ComboData *combo);
 
 char *capitalize(const char *string);
 
+void join_string(const int *array, int size, char *output);
+
 int main()
 {
     for (int i = 0; i < MAX_PARTY_SIZE; i++)
@@ -44,7 +51,7 @@ int main()
         FILE *f = fopen(filename, "r");
         if (read_buffer(f, i))
         {
-            printf("\nError parsing text.\n");
+            printf("\nError parsing text %s.\n", filename);
             return 0;
         }
         fclose(f);
@@ -56,10 +63,13 @@ int main()
         file_c,
         "// This was generated from the 'attacks_[...].txt' "
         "files in the data folder\n// by running tools/build_party\n\n"
-        "#include \"party_combos.h\"\n\n"
+        "#include \"party_combos.h\"\n"
+        "#include \"combo_sprites.h\"\n\n"
     );
     fprintf(
         file_h,
+        "// This was generated from the 'attacks_[...].txt' "
+        "files in the data folder\n// by running tools/build_party\n\n"
         "#ifndef LASTLEAVES_PARTY_COMBOS_H\n#define LASTLEAVES_PARTY_COMBOS_H\n\n"
         "#include \"../battle_vars.h\"\n\n"
     );
@@ -85,13 +95,22 @@ int main()
         {
             ComboData *combo = &combos[i][j];
             if (combo->name[0] == '\0') continue;
+            char frame_count_str[50] = {0};
+            join_string(combo->frame_counts, combo->num_frames, frame_count_str);
             combo_count++;
             fprintf(file_h, "extern const Combo combo_%s_%s;\n", character_name,
                     combo->variable_name);
             fprintf(file_c, "const Combo combo_%s_%s = {\n", character_name,
                     combo->variable_name);
             fprintf(file_c, "    .name = \"%s\",\n", combo->name);
-            fprintf(file_c, "    .animation = {},\n");
+            fprintf(file_c,
+                    "    .animation = {\n"
+                    "        .sprite_data = %s%d_%sTiles,\n"
+                    "        .num_frames = %d,\n"
+                    "        .frame_cycles = {%s},\n"
+                    "     },\n",
+                    character_name, combo->num_attacks, combo->variable_name,
+                    combo->num_frames, frame_count_str);
             fprintf(file_c, "    .combo = {");
             write_combos(file_c, combo);
             fprintf(file_c, "}\n");
@@ -121,6 +140,17 @@ int main()
     fclose(file_c);
 }
 
+void join_string(const int *array, const int size, char *output)
+{
+    for (int i = 0; i < size; i++)
+    {
+        const int number = array[i];
+        sprintf(output, "%d,", number);
+        output += strlen(output);
+    }
+    output[-1] = '\0';
+}
+
 void write_combos(FILE *f, const ComboData *combo)
 {
     // The combos are stored in reverse as it makes it easier to check them in
@@ -144,72 +174,82 @@ int read_buffer(FILE *f, int player_index)
     int combo_index = 0;
     while (fgets(line, 256, f))
     {
+        // AtkName, AtkPattern, ImageDataVariable, FrameCounts
+        char data[3][30] = {0};
         if (line[0] == ';')
         {
             printf("[Skipping comment]\n");
             continue;
         }
 
+        ComboData *combo = &combos[player_index][combo_index];
         // Make sure correct num of commas
         int num_commas = 0;
-        int comma_index = 0;
+        int string_index = 0;
         for (int i = 0; i < strlen(line); i++)
         {
             if (line[i] == ',')
             {
                 num_commas++;
-                comma_index = i;
+                string_index = 0;
+            } else if (isalpha(line[i + 1]) || line[i] != ' ' && line[i] !=
+                       '\n')
+            {
+                data[num_commas][string_index++] = line[i];
+            } else
+            {
+                data[num_commas][string_index++] = '\0';
             }
         }
-        if (num_commas != 1) return 1;
+        if (num_commas != 2) return 1;
 
         // Save move set
-        char *moveset = &line[comma_index + 1];
+        char *moveset = data[1];
 
-        // Zero terminate move name and trim spaces
-        line[comma_index] = '\0';
-        while (line[comma_index - 1] == ' ')
-        {
-            line[--comma_index] = '\0';
-        }
-        line[comma_index] = '\0';
-
-        strcpy(combos[player_index][combo_index].name, line);
+        strcpy(combo->name, data[0]);
+        strcpy(combo->animation_name, data[2]);
 
         // Convert string to ATK
         int attack_index = 0;
-        for (int i = 0; i < strlen(moveset); i++)
+        combo->num_attacks = (int) strlen(moveset);
+        for (int i = 0; i < combo->num_attacks; i++)
         {
             switch (moveset[i])
             {
                 case 'u':
                 case 'U':
-                    combos[player_index][combo_index].attacks[attack_index++] =
-                            ATK_HIGH;
+                    combo->attacks[attack_index++] = ATK_HIGH;
                     break;
                 case 'd':
                 case 'D':
-                    combos[player_index][combo_index].attacks[attack_index++] =
-                            ATK_LOW;
+                    combo->attacks[attack_index++] = ATK_LOW;
                     break;
                 case 'r':
                 case 'R':
-                    combos[player_index][combo_index].attacks[attack_index++] =
-                            ATK_RIGHT;
+                    combo->attacks[attack_index++] = ATK_RIGHT;
                     break;
                 case 'l':
                 case 'L':
-                    combos[player_index][combo_index].attacks[attack_index++] =
-                            ATK_LEFT;
+                    combo->attacks[attack_index++] = ATK_LEFT;
                     break;
                 default:
                     break;
             }
         }
-        convert_to_variable_name(combos[player_index][combo_index].name,
-                                 combos[player_index][combo_index].
-                                 variable_name);
-        combos[player_index][combo_index].attacks[attack_index] = ATK_NONE;
+
+        // Extract frame counts
+        combo->num_frames = 0;
+
+        char *endptr = data[2];
+        while (endptr[0])
+        {
+            const int count = (int) strtol(endptr, &endptr, 10);
+            combo->frame_counts[combo->num_frames++] = count;
+            endptr++;
+        }
+
+        convert_to_variable_name(combo->name, combo->variable_name);
+        combo->attacks[attack_index] = ATK_NONE;
         combo_index++;
     }
     return 0;

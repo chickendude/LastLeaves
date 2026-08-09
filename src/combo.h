@@ -8,6 +8,7 @@ typedef struct Combo
     char name[20];
     Animation animation;
     const AttackDir combo[10];
+
 } Combo;
 
 const Combo* is_combo(

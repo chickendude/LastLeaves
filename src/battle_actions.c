@@ -170,7 +170,9 @@ void perform_combo(const Combo *combo, BattleCharacter *actor,
     VBlankIntrDelay(60);
     memset32(&se_mem[30], 0, 224);
     actor->animation = &combo->animation;
-    VBlankIntrDelay(60);
+    wait_for_animation_finish(actor, target);
+    actor->animation = &actor->character->graphics->idle;
+    VBlankIntrDelay(20);
 }
 
 void perform_physical_attack(const AttackDir attack_dir, BattleCharacter *actor,

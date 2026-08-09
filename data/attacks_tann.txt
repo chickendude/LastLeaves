@@ -1,9 +1,9 @@
 ; LRUD: Left Right Up Down
-Late Hit    ,LUL
-Armored Fury,URR
-Sky Breaker ,RDLU
-Petal Blade ,DUDR
-Heavy Core  ,LUDL
-Slash Punch ,RDUD
-Frustration ,DRUUL
-Pummel Kick ,LDULU
+Late Hit    ,LUL       ,60-5-5-20
+Armored Fury,URR       ,60-5-5-20
+Sky Breaker ,RDLU      ,60-5-5-20
+Petal Blade ,DUDR      ,60-5-5-20
+Heavy Core  ,LUDL      ,60-5-5-20
+Slash Punch ,RDUD      ,60-5-5-20
+Frustration ,DRUUL     ,60-5-5-20
+Pummel Kick ,LDULU     ,60-5-5-20

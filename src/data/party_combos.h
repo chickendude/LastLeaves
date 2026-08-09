@@ -1,3 +1,6 @@
+// This was generated from the 'attacks_[...].txt' files in the data folder
+// by running tools/build_party
+
 #ifndef LASTLEAVES_PARTY_COMBOS_H
 #define LASTLEAVES_PARTY_COMBOS_H
 

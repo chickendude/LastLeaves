@@ -1,9 +1,9 @@
 ; LRUD: Left Right Up Down
-Board Smash ,RUD
-Wild Punch  ,ULL
-Shakedown   ,LULU
-Seize       ,RRUL
-Windfall    ,DLUR
-Light Flow  ,DULL
-Chain Stop  ,LRDLD
-Time Blow   ,RDLLR
+Board Smash ,RUD       ,60-5-5-20
+Wild Punch  ,ULL       ,60-5-5-20
+Shakedown   ,LULU      ,60-5-5-20
+Seize       ,RRUL      ,60-5-5-20
+Windfall    ,DLUR      ,60-5-5-20
+Light Flow  ,DULL      ,60-5-5-20
+Chain Stop  ,LRDLD     ,60-5-5-20
+Time Blow   ,RDLLR     ,60-5-5-20
