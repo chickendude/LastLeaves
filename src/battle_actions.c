@@ -327,9 +327,14 @@ void apply_damage(const BattleCharacter *actor, const BattleCharacter *target,
                   const int bonus_multiplier)
 {
     const Stats *actor_stats = &actor->character->stats;
-    const int atk = actor_stats->atk;
     Stats *target_stats = &target->character->stats;
 
+    // Calculate damage blocked by defense
+    const int def = target_stats->def;
+    const int dmg_removed = def + def >> 3;
+
+    // Calculate attack damage
+    const int atk = actor_stats->atk;
     // Add random bonus to base atk: multiplier is a range:
     // 1 adds extra 0-100% of atk
     // 2 adds extra 50-150% of atk
@@ -338,8 +343,11 @@ void apply_damage(const BattleCharacter *actor, const BattleCharacter *target,
                               ? ((bonus_multiplier - 1) * atk + random(2*atk)) >> 1
                               : 0;
     const int atk_boost = random(atk >> 3);
-    const int dmg = (atk + bonus_dmg + atk_boost) * 12 >> 4;
 
-    target_stats->hp -= dmg;
+    // Final damage calculation
+    const int dmg = ((atk + bonus_dmg + atk_boost) * 12 >> 4) - dmg_removed;
+    const int final_dmg = dmg > 4 ? dmg : random(5) + 1;
+
+    target_stats->hp -= final_dmg;
     draw_damage(dmg, target->x + fxpt(8), target->y);
 }
