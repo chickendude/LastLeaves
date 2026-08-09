@@ -257,8 +257,8 @@ const Combo combo_tann_sky_breaker = {
      },
     .combo = {ATK_HIGH, ATK_LEFT, ATK_LOW, ATK_RIGHT},
     .combo_length = 4,
-    .damage_frames = {2},
-    .num_damage_frames = 1
+    .damage_frames = {2,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_tann_petal_blade = {
@@ -270,8 +270,8 @@ const Combo combo_tann_petal_blade = {
      },
     .combo = {ATK_RIGHT, ATK_LOW, ATK_HIGH, ATK_LOW},
     .combo_length = 4,
-    .damage_frames = {2},
-    .num_damage_frames = 1
+    .damage_frames = {2,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_tann_heavy_core = {
@@ -283,8 +283,8 @@ const Combo combo_tann_heavy_core = {
      },
     .combo = {ATK_LEFT, ATK_LOW, ATK_HIGH, ATK_LEFT},
     .combo_length = 4,
-    .damage_frames = {2},
-    .num_damage_frames = 1
+    .damage_frames = {2,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_tann_slash_punch = {
@@ -296,8 +296,8 @@ const Combo combo_tann_slash_punch = {
      },
     .combo = {ATK_LOW, ATK_HIGH, ATK_LOW, ATK_RIGHT},
     .combo_length = 4,
-    .damage_frames = {2},
-    .num_damage_frames = 1
+    .damage_frames = {2,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_tann_frustration = {
@@ -309,8 +309,8 @@ const Combo combo_tann_frustration = {
      },
     .combo = {ATK_LEFT, ATK_HIGH, ATK_HIGH, ATK_RIGHT, ATK_LOW},
     .combo_length = 5,
-    .damage_frames = {2},
-    .num_damage_frames = 1
+    .damage_frames = {2,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_tann_pummel_kick = {
@@ -322,8 +322,8 @@ const Combo combo_tann_pummel_kick = {
      },
     .combo = {ATK_HIGH, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_LEFT},
     .combo_length = 5,
-    .damage_frames = {2},
-    .num_damage_frames = 1
+    .damage_frames = {2,3},
+    .num_damage_frames = 2
 };
 
 const Combo combos_tann[8] = { combo_tann_late_hit, combo_tann_armored_fury, combo_tann_sky_breaker, combo_tann_petal_blade, combo_tann_heavy_core, combo_tann_slash_punch, combo_tann_frustration, combo_tann_pummel_kick, };

@@ -6,6 +6,7 @@
 #include "battle_vars.h"
 #include "global.h"
 #include "math.h"
+#include "mgba_log.h"
 #include "party.h"
 #include "text.h"
 
@@ -26,8 +27,24 @@ void perform_return(const BattleAction *action);
 void move_character(BattleCharacter *character, int target_x, int target_y,
                     int steps);
 
+void wait_for_animation_frame(const BattleCharacter *actor,
+                              BattleCharacter *target);
+
 void wait_for_animation_finish(const BattleCharacter *actor,
                                BattleCharacter *target);
+
+/**
+ * Calculates and applies the damage from one character's physical attack to
+ * another character.
+ * @param actor Attacking character
+ * @param target Defending character
+ * @param bonus_multiplier Bonus damage. It's added on top of the normal damage
+ * and is calculated based on the attack value. A value of 1 adds an extra
+ * 0-100% of the attacker's ATK. A value of 2 adds an extra 50-150% of the
+ * attacker's ATK. Each additional value adds 50% to the base value.
+ */
+void apply_damage(const BattleCharacter *actor, const BattleCharacter *target,
+                  int bonus_multiplier);
 
 // --------------- public functions -------------------
 
@@ -163,14 +180,27 @@ void perform_attack(const BattleAction *action)
 }
 
 void perform_combo(const Combo *combo, BattleCharacter *actor,
-                             BattleCharacter *target)
+                   BattleCharacter *target)
 {
     print_box(8, 10, 12, 3);
     print(0, 9, 11, combo->name);
     VBlankIntrDelay(60);
     memset32(&se_mem[30], 0, 224);
     actor->animation = &combo->animation;
-    wait_for_animation_finish(actor, target);
+    do
+    {
+        // Check if the current animation frame should have damage applied
+        for (int i = 0; i < combo->num_damage_frames; i++)
+        {
+            if (combo->damage_frames[i] == actor->frame_index)
+            {
+                mgbalog("frame %d", actor->frame_index);
+                const int bonus = combo->combo_length - 2;
+                apply_damage(actor, target, bonus);
+            }
+        }
+        wait_for_animation_frame(actor, target);
+    } while (actor->frame_index);
     actor->animation = &actor->character->graphics->idle;
     VBlankIntrDelay(20);
 }
@@ -178,8 +208,6 @@ void perform_combo(const Combo *combo, BattleCharacter *actor,
 void perform_physical_attack(const AttackDir attack_dir, BattleCharacter *actor,
                              BattleCharacter *target)
 {
-    const Stats *actor_stats = &actor->character->stats;
-    Stats *target_stats = &target->character->stats;
     switch (attack_dir)
     {
         case ATK_LEFT:
@@ -199,9 +227,7 @@ void perform_physical_attack(const AttackDir attack_dir, BattleCharacter *actor,
             break;
     }
     target->animation = &target->character->graphics->hit;
-    const int dmg = actor_stats->atk + random((actor_stats->atk >> 2) + 1);
-    target_stats->hp -= dmg;
-    draw_damage(dmg, target->x + fxpt(8), target->y);
+    apply_damage(actor, target, 0);
     wait_for_animation_finish(actor, target);
     actor->animation = &actor->character->graphics->idle;
     VBlankIntrDelay(10);
@@ -270,6 +296,21 @@ void move_character(
     VBlankIntrWait();
 }
 
+void wait_for_animation_frame(const BattleCharacter *actor,
+                              BattleCharacter *target)
+{
+    while (true)
+    {
+        VBlankIntrWait();
+        // Reset hurt animation
+        if (target->frame_index == 0 && target->frame_cycle == 0)
+        {
+            target->animation = &target->character->graphics->idle;
+        }
+        if (actor->frame_cycle == 0) return;
+    }
+}
+
 void wait_for_animation_finish(const BattleCharacter *actor,
                                BattleCharacter *target)
 {
@@ -277,11 +318,28 @@ void wait_for_animation_finish(const BattleCharacter *actor,
     // in the battle_vblank() function, so after first vblank frame_cycle == 1
     while (true)
     {
-        VBlankIntrWait();
+        wait_for_animation_frame(actor, target);
         if (actor->frame_index == 0 && actor->frame_cycle == 0) return;
-        if (target->frame_index == 0 && target->frame_cycle == 0)
-        {
-            target->animation = &target->character->graphics->idle;
-        }
     }
+}
+
+void apply_damage(const BattleCharacter *actor, const BattleCharacter *target,
+                  const int bonus_multiplier)
+{
+    const Stats *actor_stats = &actor->character->stats;
+    const int atk = actor_stats->atk;
+    Stats *target_stats = &target->character->stats;
+
+    // Add random bonus to base atk: multiplier is a range:
+    // 1 adds extra 0-100% of atk
+    // 2 adds extra 50-150% of atk
+    // 3 adds extra 100-200% of atk
+    const int bonus_dmg = bonus_multiplier
+                              ? ((bonus_multiplier - 1) * atk + random(2*atk)) >> 1
+                              : 0;
+    const int atk_boost = random(atk >> 3);
+    const int dmg = (atk + bonus_dmg + atk_boost) * 12 >> 4;
+
+    target_stats->hp -= dmg;
+    draw_damage(dmg, target->x + fxpt(8), target->y);
 }

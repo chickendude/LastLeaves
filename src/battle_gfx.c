@@ -68,13 +68,15 @@ void draw_damage(const int damage, const int x, const int y)
         dmgText = &damage_texts[index];
         if (dmgText->frames_left <= 0) break;
     }
+    if (dmgText == NULL) return;
+
     dmgText->num_digits = count_digits(damage, dmgText->digits);
     dmgText->x = x;
     dmgText->y = y;
     dmgText->frames_left = DAMAGE_TEXT_FRAMES;
     dmgText->affine_mat = (OBJ_AFFINE *) &oam_buf[index * 4];
 
-    // Set initial OAM data (will be updated in updated_damage_texts, run in
+    // Set initial OAM data (will be updated in update_damage_texts, run in
     //  vblank interrupt)
     for (int i = 0; i < dmgText->num_digits; i++)
     {
@@ -100,7 +102,7 @@ void update_damage_texts()
         const int frame = DAMAGE_TEXT_FRAMES - dmgText->frames_left;
 
         // Make the text rise for the first 15 frames
-        if (frame < 15) dmgText->y -= FIXED_PIXEL * .8;
+        if (frame < 18) dmgText->y -= FIXED_PIXEL * .8;
 
         // Scale the text in. Larger number means the sprite will be smaller.
         // They are in FPN, so 1<<8 means no transformation, 2<<8 = .5x zoom

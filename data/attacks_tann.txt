@@ -1,7 +1,7 @@
 ; LRUD: Left Right Up Down
 Late Hit    ,LUL       ,60-5-5-20 ,2
 Armored Fury,URR       ,60-5-5-20 ,2
-Sky Breaker ,RDLU      ,60-5-5-20 ,2
+Sky Breaker ,RDLU      ,30-5-5-20 ,1-3
 Petal Blade ,DUDR      ,60-5-5-20 ,2
 Heavy Core  ,LUDL      ,60-5-5-20 ,2
 Slash Punch ,RDUD      ,60-5-5-20 ,2
