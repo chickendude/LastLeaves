@@ -1,10 +1,10 @@
 ; LRUD: Left Right Up Down
 ; name, attack dirs, in-game frames per sprite
-Sweeper     ,UUD       ,30-5-5-20
-Left Strike ,RLL       ,10-10-10-10
-Round Kick  ,RDLU      ,10-10-10-10
-Cannon Gash ,DUUD      ,10-10-10-10
-Wonder Spin ,DUDR      ,10-10-10-10
-Blind Fist  ,UDUL      ,10-10-10-10
-Whirlpool   ,LRLLD     ,10-10-10-10
-Jump Kick   ,DDULU     ,10-10-10-10
+Sweeper     ,UUD       ,30-5-5-20   ,2
+Left Strike ,RLL       ,10-10-10-10 ,1-3
+Round Kick  ,RDLU      ,10-10-10-10 ,1-3
+Cannon Gash ,DUUD      ,10-10-10-10 ,1-3
+Wonder Spin ,DUDR      ,10-10-10-10 ,1-3
+Blind Fist  ,UDUL      ,10-10-10-10 ,1-3
+Whirlpool   ,LRLLD     ,10-10-10-10 ,1-2-3
+Jump Kick   ,DDULU     ,10-10-10-10 ,1-2-3

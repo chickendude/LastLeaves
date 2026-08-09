@@ -20,6 +20,8 @@ typedef struct ComboData
     int num_frames;
     AttackDir attacks[10];
     int num_attacks;
+    int damage_frames[10];
+    int num_damage_frames;
 } ComboData;
 
 char *filenames[MAX_PARTY_SIZE] = {
@@ -42,6 +44,9 @@ void write_combos(FILE *f, const ComboData *combo);
 char *capitalize(const char *string);
 
 void join_string(const int *array, int size, char *output);
+
+/** Splits string into array of integers, returns length */
+int split_string(char *input, int *output);
 
 int main()
 {
@@ -96,7 +101,11 @@ int main()
             ComboData *combo = &combos[i][j];
             if (combo->name[0] == '\0') continue;
             char frame_count_str[50] = {0};
-            join_string(combo->frame_counts, combo->num_frames, frame_count_str);
+            char damage_frame_str[50] = {0};
+            join_string(combo->frame_counts, combo->num_frames,
+                        frame_count_str);
+            join_string(combo->damage_frames, combo->num_damage_frames,
+                        damage_frame_str);
             combo_count++;
             fprintf(file_h, "extern const Combo combo_%s_%s;\n", character_name,
                     combo->variable_name);
@@ -113,7 +122,11 @@ int main()
                     combo->num_frames, frame_count_str);
             fprintf(file_c, "    .combo = {");
             write_combos(file_c, combo);
-            fprintf(file_c, "}\n");
+            fprintf(file_c, "},\n");
+            fprintf(file_c, "    .combo_length = %d,\n", combo->num_attacks);
+            fprintf(file_c, "    .damage_frames = {%s},\n", damage_frame_str);
+            fprintf(file_c, "    .num_damage_frames = %d\n",
+                    combo->num_damage_frames);
             fprintf(file_c, "};\n\n");
         }
 
@@ -170,12 +183,12 @@ void write_combos(FILE *f, const ComboData *combo)
 
 int read_buffer(FILE *f, int player_index)
 {
+    // AtkName, AtkPattern, ImageDataVariable, FrameCounts
+    char data[4][30] = {0};
     char line[256];
     int combo_index = 0;
     while (fgets(line, 256, f))
     {
-        // AtkName, AtkPattern, ImageDataVariable, FrameCounts
-        char data[3][30] = {0};
         if (line[0] == ';')
         {
             printf("[Skipping comment]\n");
@@ -201,7 +214,7 @@ int read_buffer(FILE *f, int player_index)
                 data[num_commas][string_index++] = '\0';
             }
         }
-        if (num_commas != 2) return 1;
+        if (num_commas != 3) return 1;
 
         // Save move set
         char *moveset = data[1];
@@ -238,21 +251,28 @@ int read_buffer(FILE *f, int player_index)
         }
 
         // Extract frame counts
-        combo->num_frames = 0;
-
-        char *endptr = data[2];
-        while (endptr[0])
-        {
-            const int count = (int) strtol(endptr, &endptr, 10);
-            combo->frame_counts[combo->num_frames++] = count;
-            endptr++;
-        }
+        combo->num_frames = split_string(data[2], combo->frame_counts);
+        combo->num_damage_frames = split_string(data[3], combo->damage_frames);
 
         convert_to_variable_name(combo->name, combo->variable_name);
         combo->attacks[attack_index] = ATK_NONE;
         combo_index++;
     }
     return 0;
+}
+
+int split_string(char *input, int *output)
+{
+    int num_frames = 0;
+
+    char *endptr = input;
+    while (endptr[0])
+    {
+        const int count = (int) strtol(endptr, &endptr, 10);
+        output[num_frames++] = count;
+        endptr++;
+    }
+    return num_frames;
 }
 
 void convert_to_variable_name(const char *attack_name, char *variable_name)

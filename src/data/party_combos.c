@@ -13,7 +13,10 @@ const Combo combo_lynne_sweeper = {
         .num_frames = 4,
         .frame_cycles = {30,5,5,20},
      },
-    .combo = {ATK_LOW, ATK_HIGH, ATK_HIGH}
+    .combo = {ATK_LOW, ATK_HIGH, ATK_HIGH},
+    .combo_length = 3,
+    .damage_frames = {2},
+    .num_damage_frames = 1
 };
 
 const Combo combo_lynne_left_strike = {
@@ -23,7 +26,10 @@ const Combo combo_lynne_left_strike = {
         .num_frames = 4,
         .frame_cycles = {10,10,10,10},
      },
-    .combo = {ATK_LEFT, ATK_LEFT, ATK_RIGHT}
+    .combo = {ATK_LEFT, ATK_LEFT, ATK_RIGHT},
+    .combo_length = 3,
+    .damage_frames = {1,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_lynne_round_kick = {
@@ -33,7 +39,10 @@ const Combo combo_lynne_round_kick = {
         .num_frames = 4,
         .frame_cycles = {10,10,10,10},
      },
-    .combo = {ATK_HIGH, ATK_LEFT, ATK_LOW, ATK_RIGHT}
+    .combo = {ATK_HIGH, ATK_LEFT, ATK_LOW, ATK_RIGHT},
+    .combo_length = 4,
+    .damage_frames = {1,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_lynne_cannon_gash = {
@@ -43,7 +52,10 @@ const Combo combo_lynne_cannon_gash = {
         .num_frames = 4,
         .frame_cycles = {10,10,10,10},
      },
-    .combo = {ATK_LOW, ATK_HIGH, ATK_HIGH, ATK_LOW}
+    .combo = {ATK_LOW, ATK_HIGH, ATK_HIGH, ATK_LOW},
+    .combo_length = 4,
+    .damage_frames = {1,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_lynne_wonder_spin = {
@@ -53,7 +65,10 @@ const Combo combo_lynne_wonder_spin = {
         .num_frames = 4,
         .frame_cycles = {10,10,10,10},
      },
-    .combo = {ATK_RIGHT, ATK_LOW, ATK_HIGH, ATK_LOW}
+    .combo = {ATK_RIGHT, ATK_LOW, ATK_HIGH, ATK_LOW},
+    .combo_length = 4,
+    .damage_frames = {1,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_lynne_blind_fist = {
@@ -63,7 +78,10 @@ const Combo combo_lynne_blind_fist = {
         .num_frames = 4,
         .frame_cycles = {10,10,10,10},
      },
-    .combo = {ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_HIGH}
+    .combo = {ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_HIGH},
+    .combo_length = 4,
+    .damage_frames = {1,3},
+    .num_damage_frames = 2
 };
 
 const Combo combo_lynne_whirlpool = {
@@ -73,7 +91,10 @@ const Combo combo_lynne_whirlpool = {
         .num_frames = 4,
         .frame_cycles = {10,10,10,10},
      },
-    .combo = {ATK_LOW, ATK_LEFT, ATK_LEFT, ATK_RIGHT, ATK_LEFT}
+    .combo = {ATK_LOW, ATK_LEFT, ATK_LEFT, ATK_RIGHT, ATK_LEFT},
+    .combo_length = 5,
+    .damage_frames = {1,2,3},
+    .num_damage_frames = 3
 };
 
 const Combo combo_lynne_jump_kick = {
@@ -83,7 +104,10 @@ const Combo combo_lynne_jump_kick = {
         .num_frames = 4,
         .frame_cycles = {10,10,10,10},
      },
-    .combo = {ATK_HIGH, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_LOW}
+    .combo = {ATK_HIGH, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_LOW},
+    .combo_length = 5,
+    .damage_frames = {1,2,3},
+    .num_damage_frames = 3
 };
 
 const Combo combos_lynne[8] = { combo_lynne_sweeper, combo_lynne_left_strike, combo_lynne_round_kick, combo_lynne_cannon_gash, combo_lynne_wonder_spin, combo_lynne_blind_fist, combo_lynne_whirlpool, combo_lynne_jump_kick, };
@@ -97,7 +121,10 @@ const Combo combo_roak_board_smash = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_LOW, ATK_HIGH, ATK_RIGHT}
+    .combo = {ATK_LOW, ATK_HIGH, ATK_RIGHT},
+    .combo_length = 3,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_roak_wild_punch = {
@@ -107,7 +134,10 @@ const Combo combo_roak_wild_punch = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_LEFT, ATK_LEFT, ATK_HIGH}
+    .combo = {ATK_LEFT, ATK_LEFT, ATK_HIGH},
+    .combo_length = 3,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_roak_shakedown = {
@@ -117,7 +147,10 @@ const Combo combo_roak_shakedown = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_HIGH, ATK_LEFT, ATK_HIGH, ATK_LEFT}
+    .combo = {ATK_HIGH, ATK_LEFT, ATK_HIGH, ATK_LEFT},
+    .combo_length = 4,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_roak_seize = {
@@ -127,7 +160,10 @@ const Combo combo_roak_seize = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_LEFT, ATK_HIGH, ATK_RIGHT, ATK_RIGHT}
+    .combo = {ATK_LEFT, ATK_HIGH, ATK_RIGHT, ATK_RIGHT},
+    .combo_length = 4,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_roak_windfall = {
@@ -137,7 +173,10 @@ const Combo combo_roak_windfall = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_RIGHT, ATK_HIGH, ATK_LEFT, ATK_LOW}
+    .combo = {ATK_RIGHT, ATK_HIGH, ATK_LEFT, ATK_LOW},
+    .combo_length = 4,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_roak_light_flow = {
@@ -147,7 +186,10 @@ const Combo combo_roak_light_flow = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_LEFT, ATK_LEFT, ATK_HIGH, ATK_LOW}
+    .combo = {ATK_LEFT, ATK_LEFT, ATK_HIGH, ATK_LOW},
+    .combo_length = 4,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_roak_chain_stop = {
@@ -157,7 +199,10 @@ const Combo combo_roak_chain_stop = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_LOW, ATK_LEFT, ATK_LOW, ATK_RIGHT, ATK_LEFT}
+    .combo = {ATK_LOW, ATK_LEFT, ATK_LOW, ATK_RIGHT, ATK_LEFT},
+    .combo_length = 5,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_roak_time_blow = {
@@ -167,7 +212,10 @@ const Combo combo_roak_time_blow = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_RIGHT, ATK_LEFT, ATK_LEFT, ATK_LOW, ATK_RIGHT}
+    .combo = {ATK_RIGHT, ATK_LEFT, ATK_LEFT, ATK_LOW, ATK_RIGHT},
+    .combo_length = 5,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combos_roak[8] = { combo_roak_board_smash, combo_roak_wild_punch, combo_roak_shakedown, combo_roak_seize, combo_roak_windfall, combo_roak_light_flow, combo_roak_chain_stop, combo_roak_time_blow, };
@@ -181,7 +229,10 @@ const Combo combo_tann_late_hit = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_LEFT, ATK_HIGH, ATK_LEFT}
+    .combo = {ATK_LEFT, ATK_HIGH, ATK_LEFT},
+    .combo_length = 3,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_tann_armored_fury = {
@@ -191,7 +242,10 @@ const Combo combo_tann_armored_fury = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_RIGHT, ATK_RIGHT, ATK_HIGH}
+    .combo = {ATK_RIGHT, ATK_RIGHT, ATK_HIGH},
+    .combo_length = 3,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_tann_sky_breaker = {
@@ -201,7 +255,10 @@ const Combo combo_tann_sky_breaker = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_HIGH, ATK_LEFT, ATK_LOW, ATK_RIGHT}
+    .combo = {ATK_HIGH, ATK_LEFT, ATK_LOW, ATK_RIGHT},
+    .combo_length = 4,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_tann_petal_blade = {
@@ -211,7 +268,10 @@ const Combo combo_tann_petal_blade = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_RIGHT, ATK_LOW, ATK_HIGH, ATK_LOW}
+    .combo = {ATK_RIGHT, ATK_LOW, ATK_HIGH, ATK_LOW},
+    .combo_length = 4,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_tann_heavy_core = {
@@ -221,7 +281,10 @@ const Combo combo_tann_heavy_core = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_LEFT, ATK_LOW, ATK_HIGH, ATK_LEFT}
+    .combo = {ATK_LEFT, ATK_LOW, ATK_HIGH, ATK_LEFT},
+    .combo_length = 4,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_tann_slash_punch = {
@@ -231,7 +294,10 @@ const Combo combo_tann_slash_punch = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_LOW, ATK_HIGH, ATK_LOW, ATK_RIGHT}
+    .combo = {ATK_LOW, ATK_HIGH, ATK_LOW, ATK_RIGHT},
+    .combo_length = 4,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_tann_frustration = {
@@ -241,7 +307,10 @@ const Combo combo_tann_frustration = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_LEFT, ATK_HIGH, ATK_HIGH, ATK_RIGHT, ATK_LOW}
+    .combo = {ATK_LEFT, ATK_HIGH, ATK_HIGH, ATK_RIGHT, ATK_LOW},
+    .combo_length = 5,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combo_tann_pummel_kick = {
@@ -251,7 +320,10 @@ const Combo combo_tann_pummel_kick = {
         .num_frames = 4,
         .frame_cycles = {60,5,5,20},
      },
-    .combo = {ATK_HIGH, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_LEFT}
+    .combo = {ATK_HIGH, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_LEFT},
+    .combo_length = 5,
+    .damage_frames = {},
+    .num_damage_frames = 0
 };
 
 const Combo combos_tann[8] = { combo_tann_late_hit, combo_tann_armored_fury, combo_tann_sky_breaker, combo_tann_petal_blade, combo_tann_heavy_core, combo_tann_slash_punch, combo_tann_frustration, combo_tann_pummel_kick, };
