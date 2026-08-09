@@ -7,6 +7,11 @@ typedef enum MenuResult
     RESULT_NONE, RESULT_OK, RESULT_CANCEL
 } MenuResult;
 
+typedef enum AttackDir
+{
+    ATK_NONE, ATK_LEFT, ATK_HIGH, ATK_LOW, ATK_RIGHT
+} AttackDir;
+
 //  Defines missing from tonc.
 /** ALPHA option for REG_BLDCNT / BLD_BUILD. */
 #define FADE_ALPHA 1
@@ -15,12 +20,18 @@ typedef enum MenuResult
 extern OBJ_ATTR oam_buf[128];
 
 /** Max number of actions that can take place in a battle each turn. */
+#define MAX_COMBOS 15
+
+/** Max number of actions that can take place in a battle each turn. */
 #define MAX_ACTIONS 40
 
 /** Max number of damage texts that can be shown at once. */
 #define MAX_DAMAGE_TEXTS 5
 
 /** Number of frames to display damage text in battles. */
-#define DAMAGE_TEXT_FRAMES 40
+#define DAMAGE_TEXT_FRAMES 30
+
+/** Maximum number of players in the party. */
+#define MAX_PARTY_SIZE 3
 
 #endif //LASTLEAVES_GLOBAL_H

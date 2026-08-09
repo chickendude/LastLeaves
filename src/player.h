@@ -1,6 +1,6 @@
 #ifndef LASTLEAVES_PLAYER_H
 #define LASTLEAVES_PLAYER_H
-#include "party_data.h"
+#include "data/party_data.h"
 #include "stats.h"
 
 typedef enum PlayerType
@@ -11,6 +11,8 @@ typedef enum PlayerType
 typedef struct Player
 {
     char name[10];
+    const Combo *combos;
+    int num_combos;
     PlayerType type;
     const PlayerGraphics *graphics;
     Stats stats;

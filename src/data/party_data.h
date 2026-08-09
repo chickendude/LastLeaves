@@ -1,13 +1,8 @@
 #ifndef LASTLEAVES_PARTY_DATA_H
 #define LASTLEAVES_PARTY_DATA_H
 
-typedef struct Animation
-{
-    const unsigned int *sprite_data;
-    const int num_frames;
-    /** How many cycles to show each frame in the animation. */
-    const char frame_cycles[10];
-} Animation;
+#include "animation.h"
+#include "combo.h"
 
 typedef struct PlayerGraphics
 {
@@ -24,6 +19,8 @@ typedef struct PlayerGraphics
 
 typedef struct PlayerData {
     const PlayerGraphics *graphics;
+    const Combo *combos;
+    int num_combos;
     char name[10];
     /** Level **/
     int level;

@@ -1,0 +1,296 @@
+#include <ctype.h>
+#undef tolower
+#undef toupper
+#undef isalpha
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "global.h"
+
+const char output_filename_c[] = "../src/data/party_combos.c";
+const char output_filename_h[] = "../src/data/party_combos.h";
+
+typedef struct ComboData
+{
+    char name[20];
+    char variable_name[30];
+    char animation_name[40];
+    int frame_counts[10];
+    int num_frames;
+    AttackDir attacks[10];
+    int num_attacks;
+    int damage_frames[10];
+    int num_damage_frames;
+} ComboData;
+
+char *filenames[MAX_PARTY_SIZE] = {
+    "../data/attacks_lynne.txt",
+    "../data/attacks_roak.txt",
+    "../data/attacks_tann.txt",
+};
+
+char buffer[1024 * 5];
+
+// Combos by player, 3 players with up to 15 combos each
+ComboData combos[3][15];
+
+int read_buffer(FILE *f, int player_index);
+
+void convert_to_variable_name(const char *attack_name, char *variable_name);
+
+void write_combos(FILE *f, const ComboData *combo);
+
+char *capitalize(const char *string);
+
+void join_string(const int *array, int size, char *output);
+
+/** Splits string into array of integers, returns length */
+int split_string(char *input, int *output);
+
+int main()
+{
+    for (int i = 0; i < MAX_PARTY_SIZE; i++)
+    {
+        const char *filename = filenames[i];
+        FILE *f = fopen(filename, "r");
+        if (read_buffer(f, i))
+        {
+            printf("\nError parsing text %s.\n", filename);
+            return 0;
+        }
+        fclose(f);
+    }
+
+    FILE *file_c = fopen(output_filename_c, "w");
+    FILE *file_h = fopen(output_filename_h, "w");
+    fprintf(
+        file_c,
+        "// This was generated from the 'attacks_[...].txt' "
+        "files in the data folder\n// by running tools/build_party\n\n"
+        "#include \"party_combos.h\"\n"
+        "#include \"combo_sprites.h\"\n\n"
+    );
+    fprintf(
+        file_h,
+        "// This was generated from the 'attacks_[...].txt' "
+        "files in the data folder\n// by running tools/build_party\n\n"
+        "#ifndef LASTLEAVES_PARTY_COMBOS_H\n#define LASTLEAVES_PARTY_COMBOS_H\n\n"
+        "#include \"../battle_vars.h\"\n\n"
+    );
+
+    // Loop through each character's combos
+    for (int i = 0; i < MAX_PARTY_SIZE; i++)
+    {
+        int combo_count = 0;
+        // Create copy of filename to work with
+        char input_filename[40];
+        strcpy(input_filename, filenames[i]);
+
+        // Strip out the front of string before the character's name
+        const char *character_name = strchr(input_filename, '_') + 1;
+
+        // Remove file extension
+        strchr(character_name, '.')[0] = 0;
+
+        // Add comment in file to mark start of character's moves
+        fprintf(file_c, "// %s\n\n", character_name);
+        printf("\n");
+        for (int j = 0; j < 10; j++)
+        {
+            ComboData *combo = &combos[i][j];
+            if (combo->name[0] == '\0') continue;
+            char frame_count_str[50] = {0};
+            char damage_frame_str[50] = {0};
+            join_string(combo->frame_counts, combo->num_frames,
+                        frame_count_str);
+            join_string(combo->damage_frames, combo->num_damage_frames,
+                        damage_frame_str);
+            combo_count++;
+            fprintf(file_h, "extern const Combo combo_%s_%s;\n", character_name,
+                    combo->variable_name);
+            fprintf(file_c, "const Combo combo_%s_%s = {\n", character_name,
+                    combo->variable_name);
+            fprintf(file_c, "    .name = \"%s\",\n", combo->name);
+            fprintf(file_c,
+                    "    .animation = {\n"
+                    "        .sprite_data = %s%d_%sTiles,\n"
+                    "        .num_frames = %d,\n"
+                    "        .frame_cycles = {%s},\n"
+                    "     },\n",
+                    character_name, combo->num_attacks, combo->variable_name,
+                    combo->num_frames, frame_count_str);
+            fprintf(file_c, "    .combo = {");
+            write_combos(file_c, combo);
+            fprintf(file_c, "},\n");
+            fprintf(file_c, "    .combo_length = %d,\n", combo->num_attacks);
+            fprintf(file_c, "    .damage_frames = {%s},\n", damage_frame_str);
+            fprintf(file_c, "    .num_damage_frames = %d\n",
+                    combo->num_damage_frames);
+            fprintf(file_c, "};\n\n");
+        }
+
+        // Write full combo array
+        char *character_name_upper = capitalize(character_name);
+        fprintf(file_h, "\n#define NUM_COMBOS_%s %d\n", character_name_upper,
+                combo_count);
+        fprintf(file_h, "extern const Combo combos_%s[NUM_COMBOS_%s];\n\n",
+                character_name, character_name_upper);
+        free(character_name_upper);
+        fprintf(file_c, "const Combo combos_%s[%d] = { ", character_name,
+                combo_count);
+        for (int j = 0; j < 10; j++)
+        {
+            ComboData *combo = &combos[i][j];
+            if (combo->name[0] == '\0') continue;
+            fprintf(file_c, "combo_%s_%s, ", character_name,
+                    combo->variable_name);
+        }
+        fprintf(file_c, "};\n\n");
+    }
+    fprintf(file_h, "#endif //LASTLEAVES_PARTY_COMBOS_H");
+    fclose(file_h);
+    fclose(file_c);
+}
+
+void join_string(const int *array, const int size, char *output)
+{
+    for (int i = 0; i < size; i++)
+    {
+        const int number = array[i];
+        sprintf(output, "%d,", number);
+        output += strlen(output);
+    }
+    output[-1] = '\0';
+}
+
+void write_combos(FILE *f, const ComboData *combo)
+{
+    // The combos are stored in reverse as it makes it easier to check them in
+    // battle
+    for (int i = 9; i >= 0; i--)
+    {
+        const AttackDir dir = combo->attacks[i];
+        if (dir == ATK_NONE) continue;
+
+        if (dir == ATK_HIGH) fprintf(f, "ATK_HIGH");
+        else if (dir == ATK_LOW) fprintf(f, "ATK_LOW");
+        else if (dir == ATK_LEFT) fprintf(f, "ATK_LEFT");
+        else if (dir == ATK_RIGHT) fprintf(f, "ATK_RIGHT");
+        if (i > 0/* && combo->attacks[i + 1] != ATK_NONE*/) fprintf(f, ", ");
+    }
+}
+
+int read_buffer(FILE *f, int player_index)
+{
+    // AtkName, AtkPattern, ImageDataVariable, FrameCounts
+    char data[4][30] = {0};
+    char line[256];
+    int combo_index = 0;
+    while (fgets(line, 256, f))
+    {
+        if (line[0] == ';')
+        {
+            printf("[Skipping comment]\n");
+            continue;
+        }
+
+        ComboData *combo = &combos[player_index][combo_index];
+        // Make sure correct num of commas
+        int num_commas = 0;
+        int string_index = 0;
+        for (int i = 0; i < strlen(line); i++)
+        {
+            if (line[i] == ',')
+            {
+                num_commas++;
+                string_index = 0;
+            } else if (isalpha(line[i + 1]) || line[i] != ' ' && line[i] !=
+                       '\n')
+            {
+                data[num_commas][string_index++] = line[i];
+            } else
+            {
+                data[num_commas][string_index++] = '\0';
+            }
+        }
+        if (num_commas != 3) return 1;
+
+        // Save move set
+        char *moveset = data[1];
+
+        strcpy(combo->name, data[0]);
+        strcpy(combo->animation_name, data[2]);
+
+        // Convert string to ATK
+        int attack_index = 0;
+        combo->num_attacks = (int) strlen(moveset);
+        for (int i = 0; i < combo->num_attacks; i++)
+        {
+            switch (moveset[i])
+            {
+                case 'u':
+                case 'U':
+                    combo->attacks[attack_index++] = ATK_HIGH;
+                    break;
+                case 'd':
+                case 'D':
+                    combo->attacks[attack_index++] = ATK_LOW;
+                    break;
+                case 'r':
+                case 'R':
+                    combo->attacks[attack_index++] = ATK_RIGHT;
+                    break;
+                case 'l':
+                case 'L':
+                    combo->attacks[attack_index++] = ATK_LEFT;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // Extract frame counts
+        combo->num_frames = split_string(data[2], combo->frame_counts);
+        combo->num_damage_frames = split_string(data[3], combo->damage_frames);
+
+        convert_to_variable_name(combo->name, combo->variable_name);
+        combo->attacks[attack_index] = ATK_NONE;
+        combo_index++;
+    }
+    return 0;
+}
+
+int split_string(char *input, int *output)
+{
+    int num_frames = 0;
+
+    char *endptr = input;
+    while (endptr[0])
+    {
+        const int count = (int) strtol(endptr, &endptr, 10);
+        output[num_frames++] = count;
+        endptr++;
+    }
+    return num_frames;
+}
+
+void convert_to_variable_name(const char *attack_name, char *variable_name)
+{
+    for (int i = 0; attack_name[i]; i++)
+    {
+        const char letter = (char) tolower(attack_name[i]);
+        variable_name[i] = letter == ' ' ? '_' : letter;
+    }
+}
+
+char *capitalize(const char *string)
+{
+    char *capitalized_string = malloc(strlen(string));
+    for (int i = 0; i < strlen(string - 1); i++)
+    {
+        capitalized_string[i] = (char) toupper(string[i]);
+    }
+    capitalized_string[strlen(string)] = '\0';
+    return capitalized_string;
+}

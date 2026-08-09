@@ -1,0 +1,19 @@
+Ideas on how combo length could affect damage calculation.
+
+Combo   Hits  Modifier
+-----   ----  --------
+3       1     100-200%
+4       2     150-250%
+5       3     200-300%
+6       4     250-350%
+
+How to add a combo:
+1. Add the png (and aseprite) + grit file in gfx/characters/combos and run make
+   (so that the header files are created in build/)
+   - name should be "[character_name][num_attacks_in_combo]-[combo-name].h"
+     e.g. lynne3-left-strike.png
+2. Update the corresponding text file for the character in data/attacks_[...].txt
+   - should match the naming above, e.g. "Left Strike, LLR, ..." with name
+     "left strike" and 3 attacks
+3. Run tools/build_party.c to create the C data from the text files
+4. Add the header includes for the new sprite data to src/data/combo_sprites.h

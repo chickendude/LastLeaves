@@ -1,6 +1,6 @@
 #include "party.h"
 
-#include "party_data.h"
+#include "data/party_data.h"
 
 Player party[3];
 int party_size;

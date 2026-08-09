@@ -2,7 +2,7 @@
 
 #include <tonc.h>
 
-#include "party_data.h"
+#include "data/party_data.h"
 
 // ----------------------- Private Function Definitions ------------------------
 
@@ -11,6 +11,8 @@
 void initialize_player(Player *player, const PlayerType type, const PlayerData *data)
 {
     memcpy16(player->name,  data->name, 10/2);
+    player->combos = data->combos;
+    player->num_combos = data->num_combos;
     player->graphics = data->graphics;
     player->type = type;
     player->stats.lvl = 1;

@@ -68,13 +68,15 @@ void draw_damage(const int damage, const int x, const int y)
         dmgText = &damage_texts[index];
         if (dmgText->frames_left <= 0) break;
     }
+    if (dmgText == NULL) return;
+
     dmgText->num_digits = count_digits(damage, dmgText->digits);
     dmgText->x = x;
     dmgText->y = y;
     dmgText->frames_left = DAMAGE_TEXT_FRAMES;
     dmgText->affine_mat = (OBJ_AFFINE *) &oam_buf[index * 4];
 
-    // Set initial OAM data (will be updated in updated_damage_texts, run in
+    // Set initial OAM data (will be updated in update_damage_texts, run in
     //  vblank interrupt)
     for (int i = 0; i < dmgText->num_digits; i++)
     {
@@ -100,12 +102,12 @@ void update_damage_texts()
         const int frame = DAMAGE_TEXT_FRAMES - dmgText->frames_left;
 
         // Make the text rise for the first 15 frames
-        if (frame < 15) dmgText->y -= FIXED_PIXEL * .8;
+        if (frame < 18) dmgText->y -= (int) (FIXED_PIXEL * .8);
 
         // Scale the text in. Larger number means the sprite will be smaller.
         // They are in FPN, so 1<<8 means no transformation, 2<<8 = .5x zoom
         // (it's half the normal size), 1<<7 = 2x zoom (twice normal size).
-        int scale = (2 << 8) - frame * .10 * (1 << 8);
+        int scale = (2 << 8) - (frame >> 3) * (1 << 8);
         if (scale < 1 << 8) scale = 1 << 8;
 
         // With the zoom, we want the number sprites to start off closer and
@@ -188,8 +190,8 @@ bool add_attack(BattleCharacter *character, const AttackDir attack_dir,
 {
     if (index >= MAX_COMBO || (index + 1) * 7 > character->disp_sta) return
             false;
-    character->attack_combo[index] = attack_dir;
-    character->attack_combo[index + 1] = ATK_NONE;
+    character->attacks[index] = attack_dir;
+    character->attacks[index + 1] = ATK_NONE;
     obj_set_attr(&oam_buf[ARROW_SPRITE_INDEX + index],
                  ATTR0_4BPP | ATTR0_REG | ATTR0_SQUARE | ATTR0_Y(BAR_Y * 8 + 1),
                  ATTR1_SIZE_8x8 | ATTR1_X(BAR_X * 8 + 3 + index * 7),
@@ -218,16 +220,16 @@ void remove_last_attack(BattleCharacter *character)
 {
     for (int i = 0; i < 19; i++)
     {
-        const AttackDir atk = character->attack_combo[i + 1];
+        const AttackDir atk = character->attacks[i + 1];
         if (atk == ATK_NONE)
         {
-            character->attack_combo[i] = ATK_NONE;
+            character->attacks[i] = ATK_NONE;
             obj_hide(&oam_buf[ARROW_SPRITE_INDEX + i]);
             break;
         }
     }
     // Automatically hide the last possible combo as a fallback
-    character->attack_combo[MAX_COMBO - 1] = ATK_NONE;
+    character->attacks[MAX_COMBO - 1] = ATK_NONE;
     obj_hide(&oam_buf[ARROW_SPRITE_INDEX + MAX_COMBO - 1]);
 }
 
