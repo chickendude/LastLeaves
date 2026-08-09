@@ -253,11 +253,11 @@ const Combo combo_tann_sky_breaker = {
     .animation = {
         .sprite_data = tann4_sky_breakerTiles,
         .num_frames = 4,
-        .frame_cycles = {60,5,5,20},
+        .frame_cycles = {15,5,5,20},
      },
     .combo = {ATK_HIGH, ATK_LEFT, ATK_LOW, ATK_RIGHT},
     .combo_length = 4,
-    .damage_frames = {2,3},
+    .damage_frames = {0,3},
     .num_damage_frames = 2
 };
 

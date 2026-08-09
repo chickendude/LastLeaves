@@ -331,7 +331,7 @@ void apply_damage(const BattleCharacter *actor, const BattleCharacter *target,
 
     // Calculate damage blocked by defense
     const int def = target_stats->def;
-    const int dmg_removed = def + def >> 3;
+    const int dmg_removed = def + (def >> 3);
 
     // Calculate attack damage
     const int atk = actor_stats->atk;

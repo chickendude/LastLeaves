@@ -29,7 +29,7 @@ extern OBJ_ATTR oam_buf[128];
 #define MAX_DAMAGE_TEXTS 5
 
 /** Number of frames to display damage text in battles. */
-#define DAMAGE_TEXT_FRAMES 40
+#define DAMAGE_TEXT_FRAMES 30
 
 /** Maximum number of players in the party. */
 #define MAX_PARTY_SIZE 3

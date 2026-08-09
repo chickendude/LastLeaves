@@ -102,12 +102,12 @@ void update_damage_texts()
         const int frame = DAMAGE_TEXT_FRAMES - dmgText->frames_left;
 
         // Make the text rise for the first 15 frames
-        if (frame < 18) dmgText->y -= FIXED_PIXEL * .8;
+        if (frame < 18) dmgText->y -= (int) (FIXED_PIXEL * .8);
 
         // Scale the text in. Larger number means the sprite will be smaller.
         // They are in FPN, so 1<<8 means no transformation, 2<<8 = .5x zoom
         // (it's half the normal size), 1<<7 = 2x zoom (twice normal size).
-        int scale = (2 << 8) - frame * .10 * (1 << 8);
+        int scale = (2 << 8) - (frame >> 3) * (1 << 8);
         if (scale < 1 << 8) scale = 1 << 8;
 
         // With the zoom, we want the number sprites to start off closer and
