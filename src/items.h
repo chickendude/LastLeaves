@@ -6,9 +6,20 @@
 typedef enum ItemType
 {
     ITEM_NONE,
+    /** Restore health. */
     ITEM_HEALTH,
+    /** Restore magic. */
     ITEM_MAGIC,
-    ITEM_REVIVE
+    /** Revive fainted player. */
+    ITEM_REVIVE,
+    /** Leave Dungeon. */
+    ITEM_ESCAPE,
+    /** Permanently increase stat. */
+    ITEM_STAT,
+    /** Temporarily increase stat. */
+    ITEM_STAT_BOOST,
+    /** Prevent encounters. */
+    ITEM_ENCOUNTER,
 } ItemType;
 
 typedef struct Item
