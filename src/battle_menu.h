@@ -13,6 +13,7 @@ typedef enum BattleMenu
 
 BattleMenu battle_start_menu();
 BattleMenu battle_fight_menu();
+MenuResult battle_item_menu();
 MenuResult select_attack_menu(BattleCharacter* character);
 MenuResult select_target(int* target_enemy_index);
 

@@ -126,6 +126,8 @@ int start_battle()
                     if (result == RESULT_OK) player_index++;
                     break;
                 case MENU_ITEM:
+                    battle_item_menu();
+                    break;
                 case MENU_SPIRIT:
                 case MENU_MAGIC:
                 case MENU_NONE: // Battle Menu was cancelled

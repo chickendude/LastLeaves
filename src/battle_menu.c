@@ -3,6 +3,8 @@
 
 #include "battle_gfx.h"
 #include "battle_vars.h"
+#include "input.h"
+#include "party.h"
 #include "text.h"
 
 // ------------------ Private Declarations --------------
@@ -29,13 +31,7 @@ BattleMenu battle_start_menu()
             key_pressed = MENU_FLEE;
         }
     }
-    unsigned int keys = key_curr_state();
-    while (keys)
-    {
-        VBlankIntrWait();
-        key_poll();
-        keys = key_curr_state();
-    }
+    release_keys();
     memset32(&se_mem[30], 0, 224);
     return key_pressed;
 }
@@ -44,6 +40,7 @@ BattleMenu battle_start_menu()
 #define BM_X 8
 #define BM_Y 6
 #define BM_W 7
+
 BattleMenu battle_fight_menu()
 {
     print_box(BM_X, BM_Y + 3, BM_W, 3); // left
@@ -66,29 +63,27 @@ BattleMenu battle_fight_menu()
         else if (key_hit(KEY_UP))
         {
             key_pressed = MENU_ITEM;
-        } else if (key_hit(KEY_RIGHT))
+        }
+        else if (key_hit(KEY_RIGHT))
         {
             key_pressed = MENU_MAGIC;
-        } else if (key_hit(KEY_DOWN))
+        }
+        else if (key_hit(KEY_DOWN))
         {
             key_pressed = MENU_SPIRIT;
-        } else if (key_hit(KEY_B))
+        }
+        else if (key_hit(KEY_B))
         {
             break;
         }
     }
-    unsigned int keys = key_curr_state();
-    while (keys)
-    {
-        VBlankIntrWait();
-        key_poll();
-        keys = key_curr_state();
-    }
+
+    release_keys();
     memset32(&se_mem[30], 0, 240);
     return key_pressed;
 }
 
-MenuResult select_attack_menu(BattleCharacter *character)
+MenuResult select_attack_menu(BattleCharacter* character)
 {
     draw_battlebar(character);
     // Prefill attack bar if we have a previous attack
@@ -113,13 +108,16 @@ MenuResult select_attack_menu(BattleCharacter *character)
         if (key_hit(KEY_LEFT))
         {
             attack_added = add_attack(character, ATK_LEFT, command_index);
-        } else if (key_hit(KEY_RIGHT))
+        }
+        else if (key_hit(KEY_RIGHT))
         {
             attack_added = add_attack(character, ATK_RIGHT, command_index);
-        } else if (key_hit(KEY_UP))
+        }
+        else if (key_hit(KEY_UP))
         {
             attack_added = add_attack(character, ATK_HIGH, command_index);
-        } else if (key_hit(KEY_DOWN))
+        }
+        else if (key_hit(KEY_DOWN))
         {
             attack_added = add_attack(character, ATK_LOW, command_index);
         }
@@ -139,12 +137,14 @@ MenuResult select_attack_menu(BattleCharacter *character)
             {
                 remove_last_attack(character);
                 command_index--;
-            } else if (command_index == 0 &&
-                       character->attacks[0] != ATK_NONE)
+            }
+            else if (command_index == 0 &&
+                character->attacks[0] != ATK_NONE)
             {
                 character->attacks[0] = ATK_NONE;
                 clear_attackbar_sprites();
-            } else
+            }
+            else
             {
                 success = RESULT_CANCEL;
                 break;
@@ -170,7 +170,8 @@ MenuResult select_target(int* target_enemy_index)
         if (key_hit(KEY_LEFT))
         {
             (*target_enemy_index)--;
-        } else if (key_hit(KEY_RIGHT))
+        }
+        else if (key_hit(KEY_RIGHT))
         {
             (*target_enemy_index)++;
         }
@@ -207,4 +208,55 @@ MenuResult select_target(int* target_enemy_index)
     }
     return success;
 }
+
+MenuResult battle_item_menu()
+{
+    const int inventory_size = party.inventory_size;
+    print_box(0, 3, 20, 10);
+    if (inventory_size == 0)
+    {
+        print(0, 0, 0, "No items");
+    }
+    else
+    {
+        for (int i = 0; i < inventory_size; i++)
+        {
+            const ItemSlot* slot = &party.inventory[i];
+            const Item* item = slot->item;
+            print(150 + i * 18, 2, i + 4, item->name); // left
+            print_num(150 + i * 18 + 16, 18, i + 4, slot->amount); // left
+        }
+    }
+
+    int cursor_index = 0;
+    while (true)
+    {
+        VBlankIntrWait();
+        key_poll();
+        if (key_hit(KEY_A))
+        {
+            // TODO Use item
+            break;
+        }
+        else if (key_hit(KEY_UP))
+        {
+            cursor_index--;
+            if (cursor_index < 0) cursor_index = 0;
+        }
+        else if (key_hit(KEY_DOWN))
+        {
+            cursor_index++;
+            if (cursor_index >= inventory_size) cursor_index = inventory_size - 1;
+        }
+        else if (key_hit(KEY_B))
+        {
+            break;
+        }
+    }
+
+    release_keys();
+    memset32(&se_mem[30], 0, 240);
+    return RESULT_OK;
+}
+
 // ------------------ Private Functions -----------------

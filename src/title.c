@@ -1,6 +1,7 @@
 #include <tonc.h>
 #include "title.h"
 
+#include "input.h"
 #include "titlescreen.h"
 
 #define WIDTH (M4_WIDTH / 2)
@@ -13,22 +14,14 @@ void titlescreen()
 {
     key_poll();
     show_title_image();
+    release_keys();
     unsigned int keys = key_curr_state();
-    while (keys)
-    {
-        key_poll();
-        keys = key_curr_state();
-    }
     while (!keys)
     {
         key_poll();
         keys = key_curr_state();
     }
-    while (keys)
-    {
-        key_poll();
-        keys = key_curr_state();
-    }
+    release_keys();
 }
 
 // --------------- private functions -------------------
