@@ -210,17 +210,17 @@ void initialize_parties()
     {
         battle_party[i].frame_cycle = 0;
         battle_party[i].frame_index = 0;
-        battle_party[i].animation = &party[i].graphics->idle;
+        battle_party[i].animation = &party.members[i].graphics->idle;
         battle_party[i].index = i;
         battle_party[i].is_alive = 1;
         battle_party[i].x = fxpt(188 + i * 10);
         battle_party[i].cur_x = battle_party[i].x;
         battle_party[i].y = fxpt(110 - i * 28);
         battle_party[i].cur_y = battle_party[i].y;
-        battle_party[i].character = &party[i];
-        battle_party[i].disp_hp = party[i].stats.hp;
-        battle_party[i].disp_mp = party[i].stats.mp;
-        battle_party[i].disp_sta = party[i].stats.sta;
+        battle_party[i].character = &party.members[i];
+        battle_party[i].disp_hp = party.members[i].stats.hp;
+        battle_party[i].disp_mp = party.members[i].stats.mp;
+        battle_party[i].disp_sta = party.members[i].stats.sta;
         draw_sprite(i, &battle_party[i]);
     }
     for (int i = 0; i < enemies_size; i++)
